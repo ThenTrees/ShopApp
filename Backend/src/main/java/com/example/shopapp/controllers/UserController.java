@@ -2,7 +2,6 @@ package com.example.shopapp.controllers;
 
 import java.util.List;
 
-import com.example.shopapp.dtos.responses.user.UserDtoResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -15,6 +14,7 @@ import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.UserDtoRequest;
 import com.example.shopapp.dtos.requests.UserLoginDtoRequest;
 import com.example.shopapp.dtos.responses.ResponseObject;
+import com.example.shopapp.dtos.responses.user.UserDtoResponse;
 import com.example.shopapp.dtos.responses.user.UserLoginDtoResponse;
 import com.example.shopapp.mappers.UserMapper;
 import com.example.shopapp.models.User;
@@ -85,7 +85,8 @@ public class UserController {
     }
 
     @PostMapping("/details")
-    public ResponseEntity<ResponseObject> getMyDetailInfo(@RequestHeader("Authorization") String authorizationHeader) throws Exception {
+    public ResponseEntity<ResponseObject> getMyDetailInfo(@RequestHeader("Authorization") String authorizationHeader)
+            throws Exception {
         try {
             String extractedToken = authorizationHeader.substring(7); // bo "Bearer " ra
             UserDtoResponse userDtoResponse = userService.getMyDetailInfo(extractedToken);
@@ -94,12 +95,12 @@ public class UserController {
                     .data(userDtoResponse)
                     .message("success")
                     .build());
-        }catch (Exception e){
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ResponseObject.builder()
-                                .status(HttpStatus.UNAUTHORIZED)
-                                .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
-                                .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ResponseObject.builder()
+                            .status(HttpStatus.UNAUTHORIZED)
+                            .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
+                            .build());
         }
     }
 }

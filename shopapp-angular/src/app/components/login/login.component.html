@@ -6,8 +6,8 @@
         <div class="login-form mx-auto">
           <h2 class="login-header">Đăng nhập</h2>
           <div class="form-group">
-            <label for="phoneNumber">Phone</label>
-            <input type="text" class="form-control" id="phoneNumber" name="phoneNumber" [(ngModel)]="phoneNumber"
+            <label for="phone">Phone</label>
+            <input type="text" class="form-control" id="phone" name="phoneNumber" [(ngModel)]="phoneNumber"
               (input)="loginForm.form.markAsTouched()">
             <div class="divider-nospace"></div>
             <p class="text-danger" *ngIf="phoneNumber.length < 10 && loginForm.form.touched">Số điện thoại không hợp lệ
@@ -24,14 +24,15 @@
           <div class="form-group">
             <div class="form-check checkbox-text">
               <span style="display: flex;">
-                <input type="checkbox" class="form-check-input" id="remember">
+                <input type="checkbox" class="form-check-input" id="remember" name="rememberMe"
+                  [(ngModel)]="rememberMe">
                 <label class="form-check-label text-start" for="remember">Ghi nhớ đăng nhập</label>
               </span>
               <a href="#" class="register-link">Quên mật khẩu</a>
             </div>
           </div>
           <div class="form-group">
-            <select class="form-control access-right" [(ngModel)]="selectedRole">
+            <select class="form-control access-right" name="selectedRole" [(ngModel)]="selectedRole">
               <option selected disabled>Quyền đăng nhập</option>
               <option *ngFor="let role of roles" [ngValue]="role">
                 {{role.name}}

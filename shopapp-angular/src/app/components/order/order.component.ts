@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { OrderDTO } from 'src/app/dtos/order/order.dto';
 import { environment } from 'src/app/environments/environment';
 import { Product } from 'src/app/models/product.model';
@@ -22,7 +23,7 @@ export class OrderComponent implements OnInit {
   couponCode: string = '';
   totalAmount: number = 0;
   orderData: OrderDTO = {
-    user_id: 5, // Thay bằng user_id thích hợp
+    user_id: 0, // Thay bằng user_id thích hợp
     fullname: '', // Khởi tạo rỗng, sẽ được điền từ form
     email: '', // Khởi tạo rỗng, sẽ được điền từ form
     phone_number: '', // Khởi tạo rỗng, sẽ được điền từ form
@@ -39,6 +40,8 @@ export class OrderComponent implements OnInit {
     private productService: ProductService,
     private cartService: CartService,
     private orderService: OrderService,
+    private tokenService: TokenService,
+    private router: Router,
     private fb: FormBuilder
   ) {
     this.orderForm = this.fb.group({
@@ -56,16 +59,17 @@ export class OrderComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    debugger;
-    if (!localStorage.getItem('access_token')) {
-      alert('Vui long dang nhap de mua hang');
-      return;
-    }
+    // this.tokenService.removeToken();
+    // this.cartService.clearCart();
+    this.orderData.user_id = this.tokenService.getUserId();
     debugger;
     // lay danh sach san pham tu trong gio hang(localStorage)
     const cart = this.cartService.getCart();
     // lay ra danh sach id cua cac san pham trong gio hang
     const productIds = Array.from(cart.keys());
+    if (productIds.length === 0) {
+      return;
+    }
     debugger;
     // call xuong db de lay thong tin san pham dua tren danh sach id
     this.productService.getProductsByIds(productIds).subscribe({
@@ -114,23 +118,24 @@ export class OrderComponent implements OnInit {
     //   this.orderData.shipping_method = this.orderForm.get('shipping_method')!.value;
     //   this.orderData.payment_method = this.orderForm.get('payment_method')!.value;
     //    Sử dụng toán tử spread (...) để sao chép giá trị từ form vào orderData
-    if (this.orderForm.valid) {
+    if (this.orderForm.errors == null) {
       this.orderData = {
         ...this.orderData,
         ...this.orderForm.value,
-        total_money: this.totalAmount,
       };
       this.orderData.cart_items = this.cartItems.map((cartItem) => ({
         product_id: cartItem.product.id,
         quantity: cartItem.quantity,
       }));
+      this.orderData.total_money = this.totalAmount;
       debugger;
       // Dữ liệu hợp lệ, bạn có thể gửi đơn hàng đi
       this.orderService.placeOrder(this.orderData).subscribe({
         next: (response: any) => {
           debugger;
           alert('Đặt hàng thành công');
-          // this.cartService.clearCart();
+          this.cartService.clearCart();
+          this.router.navigate(['/']);
         },
         complete: () => {
           debugger;
@@ -141,6 +146,9 @@ export class OrderComponent implements OnInit {
           alert(`Cannot place order, error: ${err.error}`);
         },
       });
+    } else {
+      // Hiển thị thông báo lỗi hoặc xử lý khác
+      alert('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.');
     }
   }
 }

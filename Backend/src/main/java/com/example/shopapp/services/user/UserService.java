@@ -2,7 +2,6 @@ package com.example.shopapp.services.user;
 
 import java.util.Optional;
 
-import com.example.shopapp.dtos.responses.user.UserDtoResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +16,7 @@ import com.example.shopapp.components.JwtTokenUtils;
 import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.UpdateUserDtoRequest;
 import com.example.shopapp.dtos.requests.UserDtoRequest;
+import com.example.shopapp.dtos.responses.user.UserDtoResponse;
 import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.exceptions.InvalidPasswordException;
 import com.example.shopapp.exceptions.PermissionDenyException;
@@ -44,6 +44,7 @@ public class UserService implements IUserService {
     AuthenticationManager authenticationManager;
     LocalizationUtils localizationUtils;
     JwtTokenUtils jwtTokenUtils;
+
     @Override
     @Transactional
     public User createUser(UserDtoRequest request) throws Exception {
@@ -128,7 +129,7 @@ public class UserService implements IUserService {
 
     @Override
     public UserDtoResponse getMyDetailInfo(String token) throws Exception {
-        if(jwtTokenUtil.isTokenExpired(token)){
+        if (jwtTokenUtil.isTokenExpired(token)) {
             throw new Exception("Token expired");
         }
 
@@ -136,15 +137,14 @@ public class UserService implements IUserService {
 
         Optional<User> user = userRepository.findByPhoneNumber(phoneNumber);
 
-        if(!user.get().isActive()){
+        if (!user.get().isActive()) {
             throw new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.USER_IS_LOCKED));
         }
 
-        if(user.isPresent()){
+        if (user.isPresent()) {
             return userMapper.toUserDtoResponse(user.get());
-        }else{
+        } else {
             throw new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }
-
     }
 }

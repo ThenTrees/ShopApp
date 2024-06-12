@@ -17,14 +17,19 @@
             <a class="nav-link active" routerLink="/">Trang chủ</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" routerLink="#">Thông báo</a>
+            <a class="nav-link" routerLink="/register">Thông báo</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" routerLink="/orders">
               <i class="fas fa-shopping-cart icon"></i> Giỏ hàng </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" routerLink="/login">Đăng nhập</a>
+            <ng-container *ngIf="!userResponse">
+              <a class="nav-link" routerLink="/login">Đăng nhập</a>
+            </ng-container>
+            <ng-container *ngIf="userResponse">
+              <a class="nav-link" routerLink="/profile">{{userResponse.fullname}}</a>
+            </ng-container>
           </li>
         </ul>
       </div>

@@ -15,60 +15,20 @@ import { UserResponse } from 'src/app/responses/user/user.response';
 })
 export class LoginComponent {
   @ViewChild('loginForm') loginForm!: NgForm;
-  phoneNumber: string = '';
-  password: string = '';
+  phoneNumber: string = '1231231231';
+  password: string = '123456';
+
   roles: Role[] = []; // khai báo biến roles
-  rememberMe: boolean = false;
+  rememberMe: boolean = true;
   selectedRole: Role | undefined; // biến lưu giá trị được chọn tù dropdown
   userResponse?: UserResponse;
+
   constructor(
     private router: Router,
     private userService: UserService,
     private tokenService: TokenService,
     private roleService: RoleService
-  ) {
-    this.phoneNumber = '';
-    this.password = '';
-  }
-
-  login() {
-    debugger;
-    const loginDto: LoginDTO = {
-      phone_number: this.phoneNumber,
-      password: this.password,
-      role_id: this.selectedRole?.id ?? 2,
-    };
-    this.userService.login(loginDto).subscribe({
-      next: (response: LoginResponse) => {
-        debugger;
-        const { token } = response;
-        if (this.rememberMe) {
-          this.tokenService.setToken(token);
-          // lấy chi tiết thông tin user thông qua token
-          this.userService.saveInfoToLocalStorage(token).subscribe({
-            next: (response: any) => {
-              debugger;
-            },
-            complete: () => {
-              debugger;
-            },
-            error: (error: Error) => {
-              debugger;
-              alert(`Error saving token to local storage: ${error.message}`);
-            },
-          });
-        }
-        this.router.navigate(['/']);
-      },
-      complete: () => {
-        debugger;
-      },
-      error: (error) => {
-        debugger;
-        alert(`Cannot login, error: ${error.error}`);
-      },
-    });
-  }
+  ) {}
 
   ngOnInit() {
     // gọi API danh sách role và gán vào biến roles
@@ -86,6 +46,56 @@ export class LoginComponent {
       error: (err: any) => {
         debugger;
         console.error(`:::ERROR get Role:::`, err);
+      },
+    });
+  }
+  createAccount() {
+    debugger;
+    // Chuyển hướng người dùng đến trang đăng ký (hoặc trang tạo tài khoản)
+    this.router.navigate(['/register']);
+  }
+
+  login() {
+    debugger;
+    const loginDto: LoginDTO = {
+      phone_number: this.phoneNumber,
+      password: this.password,
+      role_id: this.selectedRole?.id ?? 2,
+    };
+    this.userService.login(loginDto).subscribe({
+      next: (response: LoginResponse) => {
+        const { token } = response;
+        debugger;
+        if (this.rememberMe) {
+          this.tokenService.setToken(token);
+          this.userService.getUserDetail(token).subscribe({
+            next: (response1: any) => {
+              this.userResponse = {
+                ...response1.data,
+                date_of_birth: new Date(response1.data.date_of_birth),
+              };
+              debugger;
+              this.userService.saveUserResponseToLocalStorage(
+                this.userResponse
+              );
+              this.router.navigate(['/']);
+            },
+            complete: () => {
+              debugger;
+            },
+            error: (error: any) => {
+              debugger;
+              alert(`Cannot get user detail, error: ${error.error.message}`);
+            },
+          });
+        }
+      },
+      complete: () => {
+        debugger;
+      },
+      error: (error: any) => {
+        debugger;
+        alert(`Cannot login, error: ${error.error.message}`);
       },
     });
   }

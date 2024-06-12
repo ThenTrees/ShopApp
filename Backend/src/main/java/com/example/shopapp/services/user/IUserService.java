@@ -1,11 +1,11 @@
 package com.example.shopapp.services.user;
 
-import com.example.shopapp.dtos.responses.user.UserDtoResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.example.shopapp.dtos.requests.UpdateUserDtoRequest;
 import com.example.shopapp.dtos.requests.UserDtoRequest;
+import com.example.shopapp.dtos.responses.user.UserDtoResponse;
 import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.exceptions.InvalidPasswordException;
 import com.example.shopapp.models.User;

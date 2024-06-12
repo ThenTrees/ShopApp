@@ -12,10 +12,11 @@ import { UserResponse } from '../responses/user/user.response';
 export class UserService {
   private apiRegister = `${environment.apiBaseUrl}/users/register`;
   private apiLogin = `${environment.apiBaseUrl}/users/login`;
-  private apiGetInfoDetail = `${environment.apiBaseUrl}/users/details`;
+  private apiUserDetail = `${environment.apiBaseUrl}/users/details`;
   private apiConfig = {
     headers: this.createHeaders(),
   };
+
   constructor(private http: HttpClient) {}
   private createHeaders(): HttpHeaders {
     return new HttpHeaders({
@@ -31,12 +32,57 @@ export class UserService {
     return this.http.post(this.apiLogin, loginDTO, this.apiConfig);
   }
 
-  saveInfoToLocalStorage(token: string): Observable<any> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      Authentication: `Bearer ${token}`,
-      // 'Accept-Languages': 'vi',
+  getUserDetail(token: string): Observable<any> {
+    return this.http.post(this.apiUserDetail, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      }),
     });
-    return this.http.post(this.apiGetInfoDetail, {}, { headers });
+  }
+
+  saveUserResponseToLocalStorage(userResponse?: UserResponse) {
+    try {
+      debugger;
+      if (userResponse == null || !userResponse) {
+        return;
+      }
+      // Convert the userResponse object to a JSON string
+      const userResponseJSON = JSON.stringify(userResponse);
+      debugger;
+      // Save the JSON string to local storage with a key (e.g., "userResponse")
+      localStorage.setItem('user', userResponseJSON);
+      console.log('User response saved to local storage.');
+    } catch (error) {
+      console.error('Error saving user response to local storage:', error);
+    }
+  }
+
+  getUserResponseFromLocalStorage(): UserResponse | null {
+    try {
+      const userResponseJSON = localStorage.getItem('user');
+      if (userResponseJSON == null || userResponseJSON == undefined) {
+        return null;
+      }
+      // Parse the JSON string back to an object
+      const userResponse = JSON.parse(userResponseJSON!);
+      console.log('User response retrieved from local storage.');
+      return userResponse;
+    } catch (error: any) {
+      console.error(
+        'Error retrieving user response from local storage:',
+        error
+      );
+      return null;
+    }
+  }
+
+  removeUserFromLocalStorage() {
+    try {
+      localStorage.removeItem('user');
+      console.log('User response removed from local storage.');
+    } catch (error: any) {
+      console.error('Error removing user response from local storage:', error);
+    }
   }
 }

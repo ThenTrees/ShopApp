@@ -33,12 +33,12 @@ public class OrderDetail {
     Float price;
 
     @Column(name = "number_of_products")
-//    int numberOfProducts;
+    //    int numberOfProducts;
     int number_of_products;
 
     @Column(name = "total_money")
     Float total_money;
-//    Float totalMoney;
+    //    Float totalMoney;
 
     //    @Column(name = "color")
     //    String color;

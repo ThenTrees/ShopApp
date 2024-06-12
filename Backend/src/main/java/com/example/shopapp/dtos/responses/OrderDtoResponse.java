@@ -62,27 +62,27 @@ public class OrderDtoResponse {
     String paymentMethod;
 
     @JsonProperty("order_details")
-        List<OrderDetail> orderDetails;
-//    List<OrderDetailDtoResponse> orderDetailsDtoResponse;
+    List<OrderDetail> orderDetails;
+    //    List<OrderDetailDtoResponse> orderDetailsDtoResponse;
 
-        public static OrderDtoResponse fromOrder(Order order) {
-            OrderDtoResponse orderResponse = OrderDtoResponse.builder()
-                    .id(order.getId())
-                    .userId(order.getUser().getId())
-                    .fullName(order.getFullName())
-                    .phoneNumber(order.getPhoneNumber())
-                    .email(order.getEmail())
-                    .address(order.getAddress())
-                    .note(order.getNote())
-                    .orderDate(order.getOrderDate())
-                    .status(order.getStatus())
-                    .totalMoney(order.getTotalMoney())
-                    .shippingMethod(order.getShippingMethod())
-                    .shippingAddress(order.getShippingAddress())
-                    .shippingDate(order.getShippingDate())
-                    .paymentMethod(order.getPaymentMethod())
-                    .orderDetails(order.getOrderDetails())
-                    .build();
-            return orderResponse;
-        }
+    public static OrderDtoResponse fromOrder(Order order) {
+        OrderDtoResponse orderResponse = OrderDtoResponse.builder()
+                .id(order.getId())
+                .userId(order.getUser().getId())
+                .fullName(order.getFullName())
+                .phoneNumber(order.getPhoneNumber())
+                .email(order.getEmail())
+                .address(order.getAddress())
+                .note(order.getNote())
+                .orderDate(order.getOrderDate())
+                .status(order.getStatus())
+                .totalMoney(order.getTotalMoney())
+                .shippingMethod(order.getShippingMethod())
+                .shippingAddress(order.getShippingAddress())
+                .shippingDate(order.getShippingDate())
+                .paymentMethod(order.getPaymentMethod())
+                .orderDetails(order.getOrderDetails())
+                .build();
+        return orderResponse;
+    }
 }

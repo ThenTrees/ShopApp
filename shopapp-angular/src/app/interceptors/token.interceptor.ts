@@ -20,7 +20,7 @@ export class TokenInterceptor implements HttpInterceptor {
     if (token) {
       req = req.clone({
         setHeaders: {
-          Authentication: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // lưu ý
         },
       });
     }

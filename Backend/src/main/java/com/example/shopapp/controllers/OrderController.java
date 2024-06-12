@@ -80,8 +80,8 @@ public class OrderController {
     public ResponseEntity<ResponseObject> getOrder(@Valid @PathVariable("id") Long orderId) {
         Order existingOrder = orderService.getOrder(orderId);
 
-                OrderDtoResponse orderResponse = OrderDtoResponse.fromOrder(existingOrder);
-//        OrderDtoResponse orderResponse = orderMapper.toOrderDtoResponse(existingOrder);
+        OrderDtoResponse orderResponse = OrderDtoResponse.fromOrder(existingOrder);
+        //        OrderDtoResponse orderResponse = orderMapper.toOrderDtoResponse(existingOrder);
 
         return ResponseEntity.ok(new ResponseObject("Get order successfully", HttpStatus.OK, orderResponse));
     }

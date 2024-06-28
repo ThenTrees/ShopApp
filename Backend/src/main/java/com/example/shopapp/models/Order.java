@@ -50,7 +50,7 @@ public class Order {
     String status;
 
     @Column(name = "total_money")
-    Float totalMoney;
+    Double totalMoney;
 
     @Column(name = "shipping_method")
     String shippingMethod; // phương thức vận chuyển

@@ -4,17 +4,24 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.shopapp.dtos.requests.OrderDetailDtoRequest;
-import com.example.shopapp.dtos.responses.OrderDetailDtoResponse;
+import com.example.shopapp.components.LocalizationUtils;
+import com.example.shopapp.dtos.requests.order.OrderDetailDTORequest;
 import com.example.shopapp.dtos.responses.ResponseObject;
+import com.example.shopapp.dtos.responses.order.OrderDetailDTOResponse;
 import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.mappers.OrderDetailMapper;
 import com.example.shopapp.models.OrderDetail;
 import com.example.shopapp.services.orderdetail.IOrderDetailService;
+import com.example.shopapp.utils.MessageKeys;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +33,17 @@ import lombok.experimental.FieldDefaults;
 @RequiredArgsConstructor
 public class OrderDetailController {
 
+    private static final Logger log = LoggerFactory.getLogger(OrderDetailController.class);
     IOrderDetailService orderDetailService;
     OrderDetailMapper orderDetailMapper;
+    LocalizationUtils localizationUtils;
 
     @PostMapping
-    public ResponseEntity<ResponseObject> createOrderDetail(@Valid @RequestBody OrderDetailDtoRequest request)
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+    public ResponseEntity<ResponseObject> createOrderDetail(@Valid @RequestBody OrderDetailDTORequest request)
             throws Exception {
         OrderDetail newOrderDetail = orderDetailService.createOrderDetail(request);
-        OrderDetailDtoResponse orderDetailResponse = orderDetailMapper.toOrderDetailDtoResponse(newOrderDetail);
+        OrderDetailDTOResponse orderDetailResponse = orderDetailMapper.toOrderDetailDTOResponse(newOrderDetail);
         return ResponseEntity.ok()
                 .body(ResponseObject.builder()
                         .message("Create order detail successfully")
@@ -45,7 +55,7 @@ public class OrderDetailController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getOrderDetail(@Valid @PathVariable("id") Long id) throws DataNotFoundException {
         OrderDetail orderDetail = orderDetailService.getOrderDetail(id);
-        OrderDetailDtoResponse orderDetailResponse = orderDetailMapper.toOrderDetailDtoResponse(orderDetail);
+        OrderDetailDTOResponse orderDetailResponse = orderDetailMapper.toOrderDetailDTOResponse(orderDetail);
         return ResponseEntity.ok()
                 .body(ResponseObject.builder()
                         .message("Get order detail successfully")
@@ -57,8 +67,8 @@ public class OrderDetailController {
     @GetMapping("/order/{orderId}")
     public ResponseEntity<ResponseObject> getOrderDetails(@Valid @PathVariable("orderId") Long orderId) {
         List<OrderDetail> orderDetails = orderDetailService.findByOrderId(orderId);
-        List<OrderDetailDtoResponse> orderDetailResponses = orderDetails.stream()
-                .map(orderDetailMapper::toOrderDetailDtoResponse)
+        List<OrderDetailDTOResponse> orderDetailResponses = orderDetails.stream()
+                .map(orderDetailMapper::toOrderDetailDTOResponse)
                 .toList();
         return ResponseEntity.ok()
                 .body(ResponseObject.builder()
@@ -69,10 +79,13 @@ public class OrderDetailController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<ResponseObject> updateOrderDetail(
-            @Valid @PathVariable("id") Long id, @RequestBody OrderDetailDtoRequest request)
+            @Valid @PathVariable("id") Long id, @RequestBody OrderDetailDTORequest request)
             throws DataNotFoundException, Exception {
         OrderDetail orderDetail = orderDetailService.updateOrderDetail(id, request);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("phoneNumber: {}", authentication.getName());
         return ResponseEntity.ok()
                 .body(ResponseObject.builder()
                         .data(orderDetail)
@@ -82,9 +95,12 @@ public class OrderDetailController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<ResponseObject> deleteOrderDetail(@Valid @PathVariable("id") Long id) {
         orderDetailService.deleteById(id);
         return ResponseEntity.ok()
-                .body(ResponseObject.builder().message("Delete successfully").build());
+                .body(ResponseObject.builder()
+                        .message(localizationUtils.getLocalizationMessage(MessageKeys.DELETE_ORDER_DETAIL_SUCCESSFULLY))
+                        .build());
     }
 }

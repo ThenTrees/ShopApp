@@ -76,12 +76,30 @@ public class JwtTokenFilter extends OncePerRequestFilter { // filter theo tung r
 
     private boolean isByPassTokens(@NonNull HttpServletRequest request) {
         final List<Pair<String, String>> byPassTokens = Arrays.asList(
+                // Healthcheck request, no JWT token required
+                Pair.of(String.format("%s/healthcheck/health", apiPrefix), "GET"),
+                Pair.of(String.format("%s/actuator/**", apiPrefix), "GET"),
                 Pair.of(String.format("%s/roles**", apiPrefix), "GET"),
+                Pair.of(String.format("%s/comments**", apiPrefix), "GET"),
+                Pair.of(String.format("%s/coupons**", apiPrefix), "GET"),
                 Pair.of(String.format("%s/products**", apiPrefix), "GET"),
-                Pair.of(String.format("%s/orders**", apiPrefix), "GET"),
                 Pair.of(String.format("%s/categories**", apiPrefix), "GET"),
-                Pair.of(String.format("%s/users/register", apiPrefix), "POST"),
-                Pair.of(String.format("%s/users/login", apiPrefix), "POST"));
+                Pair.of(String.format("%s/orders**", apiPrefix), "GET"),
+                Pair.of(String.format("%s/order-details**", apiPrefix), "GET"),
+                Pair.of(String.format("%s/authentications/register", apiPrefix), "POST"),
+                Pair.of(String.format("%s/authentications/login", apiPrefix), "POST"),
+                Pair.of(String.format("%s/authentications/refresh-token", apiPrefix), "POST"),
+                Pair.of("/api-docs", "GET"),
+                Pair.of("/api-docs/**", "GET"),
+                Pair.of("/swagger-resources", "GET"),
+                Pair.of("/swagger-resources/**", "GET"),
+                Pair.of("/configuration/ui", "GET"),
+                Pair.of("/configuration/security", "GET"),
+                Pair.of("/swagger-ui/**", "GET"),
+                Pair.of("/swagger-ui.html", "GET"),
+                Pair.of("/swagger-ui/index.html", "GET"));
+
+        // Swagger
 
         String requestPath = request.getServletPath();
         String requestMethod = request.getMethod();

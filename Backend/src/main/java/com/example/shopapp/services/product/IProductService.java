@@ -7,26 +7,26 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.shopapp.dtos.requests.ProductDtoRequest;
-import com.example.shopapp.dtos.requests.ProductImageDtoRequest;
-import com.example.shopapp.dtos.responses.product.ProductDtoResponse;
+import com.example.shopapp.dtos.requests.product.ProductDTORequest;
+import com.example.shopapp.dtos.requests.product.ProductImageDTORequest;
+import com.example.shopapp.dtos.responses.product.ProductDTOResponse;
 import com.example.shopapp.models.Product;
 import com.example.shopapp.models.ProductImage;
 
 public interface IProductService {
-    Product createProduct(ProductDtoRequest request) throws Exception;
+    Product createProduct(ProductDTORequest request) throws Exception;
 
     Product getProductById(long id) throws Exception;
 
-    public Page<ProductDtoResponse> getAllProducts(String keyword, Long categoryId, PageRequest pageRequest);
+    public Page<ProductDTOResponse> getAllProducts(String keyword, Long categoryId, PageRequest pageRequest);
 
-    Product updateProduct(long id, ProductDtoRequest request) throws Exception;
+    Product updateProduct(long id, ProductDTORequest request) throws Exception;
 
     void deleteProduct(long id);
 
     boolean existsByName(String name);
 
-    ProductImage createProductImage(Long productId, ProductImageDtoRequest productImageDtoRequest) throws Exception;
+    ProductImage createProductImage(Long productId, ProductImageDTORequest productImageDTORequest) throws Exception;
 
     List<Product> findProductsByIds(List<Long> productIds);
 

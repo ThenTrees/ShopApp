@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 import jakarta.validation.Valid;
 
@@ -15,17 +16,19 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.shopapp.dtos.requests.ProductDtoRequest;
-import com.example.shopapp.dtos.requests.ProductImageDtoRequest;
+import com.example.shopapp.dtos.requests.product.ProductDTORequest;
+import com.example.shopapp.dtos.requests.product.ProductImageDTORequest;
 import com.example.shopapp.dtos.responses.ResponseObject;
-import com.example.shopapp.dtos.responses.product.ProductDtoResponse;
-import com.example.shopapp.dtos.responses.product.ProductListDtoResponse;
+import com.example.shopapp.dtos.responses.product.ProductDTOResponse;
+import com.example.shopapp.dtos.responses.product.ProductListDTOResponse;
 import com.example.shopapp.models.Product;
 import com.example.shopapp.models.ProductImage;
 import com.example.shopapp.services.product.IProductService;
+import com.example.shopapp.services.product.redis.IProductRedisService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.javafaker.Faker;
 
@@ -39,9 +42,12 @@ import lombok.experimental.FieldDefaults;
 @RequiredArgsConstructor
 public class ProductController {
     IProductService productService;
+    IProductRedisService productRedisService;
+    Logger logger = Logger.getLogger(ProductController.class.getName());
 
     @PostMapping
-    public ResponseEntity<ResponseObject> createProduct(@Valid @RequestBody ProductDtoRequest request)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseObject> createProduct(@Valid @RequestBody ProductDTORequest request)
             throws Exception {
         return ResponseEntity.ok(ResponseObject.builder()
                 .message("Create product successfully")
@@ -51,12 +57,13 @@ public class ProductController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ProductListDtoResponse> getAllProducts(
+    public ResponseEntity<ProductListDTOResponse> getAllProducts(
             @RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0", name = "category_id") Long categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit)
             throws JsonProcessingException {
+
         int totalPages = 0;
         if (page > 0) {
             page -= 1;
@@ -65,13 +72,22 @@ public class ProductController {
          * tạo pageable từ thông tin trang và giới hạn
          */
         PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("id").ascending());
-        Page<ProductDtoResponse> productsPage = productService.getAllProducts(keyword, categoryId, pageRequest);
-        // tổng số trang
-        totalPages = productsPage.getTotalPages();
 
-        List<ProductDtoResponse> products = productsPage.getContent();
-        return ResponseEntity.ok(ProductListDtoResponse.builder()
-                .products(products)
+        List<ProductDTOResponse> productDTOResponses =
+                productRedisService.getAllProducts(keyword, categoryId, pageRequest);
+        if (productDTOResponses == null) {
+            Page<ProductDTOResponse> productPages = productService.getAllProducts(keyword, categoryId, pageRequest);
+            // get total page
+            totalPages = productPages.getTotalPages();
+            productDTOResponses = productPages.getContent();
+            // Bổ sung totalPages vào các đối tượng ProductResponse
+            for (ProductDTOResponse product : productDTOResponses) {
+                product.setTotalPages(totalPages);
+            }
+            productRedisService.saveAllProducts(productDTOResponses, keyword, categoryId, pageRequest);
+        }
+        return ResponseEntity.ok(ProductListDTOResponse.builder()
+                .products(productDTOResponses)
                 .totalPages(totalPages)
                 .build());
     }
@@ -87,6 +103,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseObject> deleteProduct(@PathVariable long id) {
         productService.deleteProduct(id);
         return ResponseEntity.ok(ResponseObject.builder()
@@ -97,7 +114,8 @@ public class ProductController {
 
     // update a product
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject> updateProduct(@PathVariable long id, @RequestBody ProductDtoRequest request)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseObject> updateProduct(@PathVariable long id, @RequestBody ProductDTORequest request)
             throws Exception {
         Product updatedProduct = productService.updateProduct(id, request);
         return ResponseEntity.ok(ResponseObject.builder()
@@ -108,6 +126,7 @@ public class ProductController {
     }
 
     @PostMapping(value = "uploads/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseObject> uploadImages(
             @PathVariable("id") Long id, @ModelAttribute("files") List<MultipartFile> files) throws Exception {
         Product existingProduct = productService.getProductById(id);
@@ -149,7 +168,7 @@ public class ProductController {
 
             // luu vào db
             ProductImage productImage = productService.createProductImage(
-                    id, ProductImageDtoRequest.builder().imageUrl(filename).build());
+                    id, ProductImageDTORequest.builder().imageUrl(filename).build());
             productImages.add(productImage);
         }
         return ResponseEntity.ok()
@@ -168,9 +187,9 @@ public class ProductController {
             if (productService.existsByName(productName)) {
                 continue;
             }
-            ProductDtoRequest request = ProductDtoRequest.builder()
+            ProductDTORequest request = ProductDTORequest.builder()
                     .name(productName)
-                    .price((float) faker.number().numberBetween(10, 90_000_000))
+                    .price((double) faker.number().numberBetween(10, 90_000_000))
                     .description(faker.lorem().sentence())
                     .thumbnail("")
                     .categoryId((long) faker.number().numberBetween(2, 5))

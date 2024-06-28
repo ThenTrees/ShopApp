@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.example.shopapp.dtos.requests.OrderDtoRequest;
+import com.example.shopapp.dtos.requests.order.OrderDtoRequest;
 import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.models.Order;
 

@@ -30,21 +30,21 @@ public class OrderDetail {
     Product product;
 
     @Column(name = "price", nullable = false)
-    Float price;
+    Double price;
 
     @Column(name = "number_of_products")
     //    int numberOfProducts;
     int number_of_products;
 
     @Column(name = "total_money")
-    Float total_money;
-    //    Float totalMoney;
+    Double total_money;
+    //    Double totalMoney;
 
     //    @Column(name = "color")
     //    String color;
 
-    //    @ManyToOne
-    //    @JoinColumn(name = "coupon_id")
-    //    @JsonBackReference
-    //    private Coupon coupon;
+        @ManyToOne
+        @JoinColumn(name = "coupon_id")
+        @JsonBackReference
+         Coupon coupon;
 }

@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.shopapp.dtos.requests.OrderDetailDtoRequest;
+import com.example.shopapp.dtos.requests.order.OrderDetailDTORequest;
 import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.mappers.OrderDetailMapper;
 import com.example.shopapp.models.Order;
@@ -31,7 +31,7 @@ public class OrderDetailService implements IOrderDetailService {
 
     @Override
     @Transactional
-    public OrderDetail createOrderDetail(OrderDetailDtoRequest request) throws Exception {
+    public OrderDetail createOrderDetail(OrderDetailDTORequest request) throws Exception {
         // tìm xem orderId có tồn tại ko
         Order order = orderRepository
                 .findById(request.getOrderId())
@@ -56,7 +56,7 @@ public class OrderDetailService implements IOrderDetailService {
     }
 
     @Override
-    public OrderDetail updateOrderDetail(Long id, OrderDetailDtoRequest request) throws DataNotFoundException {
+    public OrderDetail updateOrderDetail(Long id, OrderDetailDTORequest request) throws DataNotFoundException {
         // tìm xem order detail có tồn tại ko đã
         OrderDetail existingOrderDetail = orderDetailRepository
                 .findById(id)

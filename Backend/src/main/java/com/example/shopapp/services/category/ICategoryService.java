@@ -2,17 +2,17 @@ package com.example.shopapp.services.category;
 
 import java.util.List;
 
-import com.example.shopapp.dtos.requests.CategoryDtoRequest;
+import com.example.shopapp.dtos.requests.category.CategoryDTORequest;
 import com.example.shopapp.models.Category;
 
 public interface ICategoryService {
-    Category createCategory(CategoryDtoRequest categoryDtoRequest);
+    Category createCategory(CategoryDTORequest categoryDTORequest);
 
     Category getCategoryById(long id);
 
     List<Category> getAllCategories();
 
-    Category updateCategory(long categoryId, CategoryDtoRequest categoryDtoRequest);
+    Category updateCategory(long categoryId, CategoryDTORequest categoryDTORequest);
 
     Category deleteCategory(long id) throws Exception;
 }

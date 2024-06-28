@@ -4,21 +4,20 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.shopapp.dtos.responses.order.OrderDTOResponse;
+import com.example.shopapp.repositories.*;
+import com.example.shopapp.services.coupon.CouponService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.shopapp.components.LocalizationUtils;
-import com.example.shopapp.dtos.requests.CartItemDto;
-import com.example.shopapp.dtos.requests.OrderDtoRequest;
+import com.example.shopapp.dtos.requests.order.CartItemDTORequest;
+import com.example.shopapp.dtos.requests.order.OrderDtoRequest;
 import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.mappers.OrderMapper;
 import com.example.shopapp.models.*;
-import com.example.shopapp.repositories.OrderDetailRepository;
-import com.example.shopapp.repositories.OrderRepository;
-import com.example.shopapp.repositories.ProductRepository;
-import com.example.shopapp.repositories.UserRepository;
 import com.example.shopapp.utils.MessageKeys;
 
 import lombok.AccessLevel;
@@ -35,7 +34,8 @@ public class OrderService implements IOrderService {
     ProductRepository productRepository;
     LocalizationUtils localizationUtils;
     OrderDetailRepository orderDetailRepository;
-
+    CouponRepository couponRepository;
+    CouponService couponService;
     @Override
     @Transactional
     public Order createOrder(OrderDtoRequest orderRequest) throws Exception {
@@ -55,12 +55,13 @@ public class OrderService implements IOrderService {
         }
         order.setShippingDate(shippingDate);
         order.setActive(true);
-        // EAV-Entity-Attribute-Value model
-        order.setTotalMoney(orderRequest.getTotalMoney());
-        orderRepository.save(order);
+
+        Coupon coupon = couponRepository.findByCode(orderRequest.getCouponCode()).orElse(null);
+        double totalMoney = 0.0;
+
         List<OrderDetail> orderDetails = new ArrayList<>();
         // tạo danh sách đối tự order-detail từ danh sách cart item
-        for (CartItemDto cartItemDto : orderRequest.getCartItems()) {
+        for (CartItemDTORequest cartItemDto : orderRequest.getCartItems()) {
             // tạo order detail từ cart item
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setOrder(order);
@@ -79,9 +80,18 @@ public class OrderService implements IOrderService {
             orderDetail.setPrice(product.getPrice());
             //            orderDetail.setTotalMoney(product.getPrice() * quantity);
             orderDetail.setTotal_money(product.getPrice() * quantity);
+            totalMoney+=product.getPrice() * quantity;
             // lưu order detail
             orderDetails.add(orderDetail);
         }
+        if(coupon != null) {
+             totalMoney = couponService.calculateDiscount(coupon.getCode(), totalMoney);
+            order.setTotalMoney(totalMoney);
+        } else {
+            order.setTotalMoney(totalMoney);
+        }
+        order.setOrderDetails(orderDetails);
+        orderRepository.save(order);
         orderDetailRepository.saveAll(orderDetails);
         return order;
     }
@@ -93,15 +103,15 @@ public class OrderService implements IOrderService {
 
     @Override
     @Transactional
-    public Order updateOrder(Long id, OrderDtoRequest orderDtoRequest) throws DataNotFoundException {
+    public Order updateOrder(Long id, OrderDtoRequest orderDTORequest) throws DataNotFoundException {
         Order order = orderRepository
                 .findById(id)
                 .orElseThrow(() -> new DataNotFoundException("Cannot find order with id: " + id));
         User existingUser = userRepository
-                .findById(orderDtoRequest.getUserId())
+                .findById(orderDTORequest.getUserId())
                 .orElseThrow(() -> new DataNotFoundException("Cannot find user with id: " + id));
         // Tạo một luồng bảng ánh xạ riêng để kiểm soát việc ánh xạ
-        orderMapper.toOrder(orderDtoRequest);
+        orderMapper.toOrder(orderDTORequest);
         order.setUser(existingUser);
         return orderRepository.save(order);
     }

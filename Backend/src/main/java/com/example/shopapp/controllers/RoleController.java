@@ -27,11 +27,5 @@ public class RoleController {
     public ResponseEntity<?> getAllRoles() {
         List<Role> roles = roleService.getAllRoles();
         return ResponseEntity.ok(roles);
-        //        return ResponseEntity.ok()
-        //                .body(ResponseObject.builder()
-        //                        .message("Get roles successfully")
-        //                        .status(HttpStatus.OK)
-        //                        .data(roles)
-        //                        .build());
     }
 }

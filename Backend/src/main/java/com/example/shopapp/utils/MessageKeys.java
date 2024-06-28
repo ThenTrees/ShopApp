@@ -20,4 +20,5 @@ public class MessageKeys {
     public static final String ROLE_DOES_NOT_EXISTS = "user.login.role_not_exist";
     public static final String PHONE_EXISTED = "user.register.phone_existed";
     public static final String NOT_FOUND = "product.get.not_found";
+    public static final String NOT_COMMENT = "comment.update.not_update";
 }

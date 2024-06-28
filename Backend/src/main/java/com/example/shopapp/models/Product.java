@@ -2,6 +2,7 @@ package com.example.shopapp.models;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -16,7 +17,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 // Event-driven approach with Spring Data JPA
-// @EntityListeners(ProductListener.class)
+@EntityListeners(ProductListener.class)
 public class Product extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +26,7 @@ public class Product extends BaseEntity {
     @Column(name = "name", nullable = false, length = 350)
     String name;
 
-    Float price;
+    Double price;
 
     @Column(name = "thumbnail", length = 300)
     String thumbnail;
@@ -39,4 +40,8 @@ public class Product extends BaseEntity {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<ProductImage> productImages;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @JsonManagedReference
+     List<Comment> comments;
 }

@@ -4,15 +4,20 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.shopapp.dtos.requests.OrderDtoRequest;
-import com.example.shopapp.dtos.responses.OrderDtoResponse;
+import com.example.shopapp.dtos.requests.order.OrderDtoRequest;
 import com.example.shopapp.dtos.responses.ResponseObject;
+import com.example.shopapp.dtos.responses.order.OrderDTOResponse;
+import com.example.shopapp.dtos.responses.order.OrderListResponse;
 import com.example.shopapp.mappers.OrderMapper;
 import com.example.shopapp.models.Order;
 import com.example.shopapp.services.order.IOrderService;
@@ -30,6 +35,7 @@ public class OrderController {
     OrderMapper orderMapper;
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<ResponseObject> createOrder(@Valid @RequestBody OrderDtoRequest request, BindingResult result)
             throws Exception {
         if (result.hasErrors()) {
@@ -42,15 +48,17 @@ public class OrderController {
                             .status(HttpStatus.BAD_REQUEST)
                             .build());
         }
-        Order orderResponse = orderService.createOrder(request);
+        Order order = orderService.createOrder(request);
+        OrderDTOResponse orderResponse =  OrderDTOResponse.fromOrder(order);
         return ResponseEntity.ok(ResponseObject.builder()
                 .message("Insert order successfully")
                 .data(orderResponse)
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .build());
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<ResponseObject> deleteOrder(@Valid @PathVariable Long id) {
         // xóa mềm => cập nhật trường active = false
         orderService.deleteOrder(id);
@@ -79,10 +87,8 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject> getOrder(@Valid @PathVariable("id") Long orderId) {
         Order existingOrder = orderService.getOrder(orderId);
-
-        OrderDtoResponse orderResponse = OrderDtoResponse.fromOrder(existingOrder);
-        //        OrderDtoResponse orderResponse = orderMapper.toOrderDtoResponse(existingOrder);
-
+        OrderDTOResponse orderResponse = OrderDTOResponse.fromOrder(existingOrder);
+        //        OrderDTOResponse orderResponse = orderMapper.toOrderDTOResponse(existingOrder);
         return ResponseEntity.ok(new ResponseObject("Get order successfully", HttpStatus.OK, orderResponse));
     }
 
@@ -93,28 +99,25 @@ public class OrderController {
         return ResponseEntity.ok(new ResponseObject("Update order successfully", HttpStatus.OK, order));
     }
 
-    //    @GetMapping("/get-orders-by-keyword")
-    //    public ResponseEntity<OrderListResponse> getOrdersByKeyword(
-    //            @RequestParam(defaultValue = "", required = false) String keyword,
-    //            @RequestParam(defaultValue = "0") int page,
-    //            @RequestParam(defaultValue = "10") int limit
-    //    ) {
-    //        // Tạo Pageable từ thông tin trang và giới hạn
-    //        PageRequest pageRequest = PageRequest.of(
-    //                page, limit,
-    //                //Sort.by("createdAt").descending()
-    //                Sort.by("id").ascending()
-    //        );
-    //        Page<OrderResponse> orderPage = orderService
-    //                .getOrdersByKeyword(keyword, pageRequest)
-    //                .map(OrderResponse::fromOrder);
-    //        // Lấy tổng số trang
-    //        int totalPages = orderPage.getTotalPages();
-    //        List<OrderResponse> orderResponses = orderPage.getContent();
-    //        return ResponseEntity.ok(OrderListResponse
-    //                .builder()
-    //                .orders(orderResponses)
-    //                .totalPages(totalPages)
-    //                .build());
-    //    }
+    @GetMapping("/get-orders-by-keyword")
+    public ResponseEntity<OrderListResponse> getOrdersByKeyword(
+            @RequestParam(defaultValue = "", required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+        // Tạo Pageable từ thông tin trang và giới hạn
+        PageRequest pageRequest = PageRequest.of(
+                page,
+                limit,
+                // Sort.by("createdAt").descending()
+                Sort.by("id").ascending());
+        Page<OrderDTOResponse> orderPage =
+                orderService.getOrdersByKeyword(keyword, pageRequest).map(OrderDTOResponse::fromOrder);
+        // Lấy tổng số trang
+        int totalPages = orderPage.getTotalPages();
+        List<OrderDTOResponse> orderResponses = orderPage.getContent();
+        return ResponseEntity.ok(OrderListResponse.builder()
+                .orderDTOResponses(orderResponses)
+                .totalPages(totalPages)
+                .build());
+    }
 }

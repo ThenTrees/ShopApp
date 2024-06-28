@@ -14,16 +14,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.shopapp.components.JwtTokenUtils;
 import com.example.shopapp.components.LocalizationUtils;
-import com.example.shopapp.dtos.requests.UpdateUserDtoRequest;
-import com.example.shopapp.dtos.requests.UserDtoRequest;
-import com.example.shopapp.dtos.responses.user.UserDtoResponse;
+import com.example.shopapp.dtos.requests.user.UserChangePasswordDTORequest;
+import com.example.shopapp.dtos.requests.user.UserDTORequest;
+import com.example.shopapp.dtos.requests.user.UserUpdateDTORequest;
+import com.example.shopapp.dtos.responses.user.UserDTOResponse;
 import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.exceptions.InvalidPasswordException;
 import com.example.shopapp.exceptions.PermissionDenyException;
 import com.example.shopapp.mappers.UserMapper;
 import com.example.shopapp.models.Role;
+import com.example.shopapp.models.Token;
 import com.example.shopapp.models.User;
 import com.example.shopapp.repositories.RoleRepository;
+import com.example.shopapp.repositories.TokenRepository;
 import com.example.shopapp.repositories.UserRepository;
 import com.example.shopapp.utils.MessageKeys;
 
@@ -43,11 +46,11 @@ public class UserService implements IUserService {
     JwtTokenUtils jwtTokenUtil;
     AuthenticationManager authenticationManager;
     LocalizationUtils localizationUtils;
-    JwtTokenUtils jwtTokenUtils;
+    TokenRepository tokenRepository;
 
     @Override
     @Transactional
-    public User createUser(UserDtoRequest request) throws Exception {
+    public User createUser(UserDTORequest request) throws Exception {
         // register user
         // Kiểm tra xem số điện thoại đã tồn tại hay chưa
         String phoneNumber = request.getPhoneNumber();
@@ -92,57 +95,140 @@ public class UserService implements IUserService {
                         localizationUtils.getLocalizationMessage(MessageKeys.WRONG_PHONE_PASSWORD));
             }
         }
-
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 phoneNumber, password, existUser.get().getAuthorities());
-
         // authenticate with Java Spring security
         authenticationManager.authenticate(authenticationToken);
+
         return jwtTokenUtil.generateToken(existUser.get());
     }
 
     @Override
     public User getUserDetailsFromToken(String token) throws Exception {
-        return null;
+        String phone = jwtTokenUtil.extractPhoneNumber(token);
+        User user = userRepository
+                .findByPhoneNumber(phone)
+                .orElseThrow(() ->
+                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+        return user;
     }
 
     @Override
     public User getUserDetailsFromRefreshToken(String token) throws Exception {
-        return null;
+        Token existingToken = tokenRepository.findByRefreshToken(token);
+        if (existingToken == null) {
+            throw new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
+        }
+        return getUserDetailsFromToken(existingToken.getToken());
     }
 
     @Override
-    public User updateUser(Long userId, UpdateUserDtoRequest updatedUserDTO) throws Exception {
-        return null;
+    @Transactional
+    public User updateUser(Long userId, UserUpdateDTORequest updatedUserDTO) throws Exception {
+
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() ->
+                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+
+        // Check if the phone number is being changed and if it already exists for another user
+        String newPhoneNumber = updatedUserDTO.getPhoneNumber();
+        if (!user.getPhoneNumber().equals(newPhoneNumber) && userRepository.existsByPhoneNumber(newPhoneNumber)) {
+            throw new DataIntegrityViolationException("Phone number already exists");
+        }
+
+        // check if the current password is correct-> process update
+        if (!passwordEncoder.matches(updatedUserDTO.getCurrentPassword(), user.getPassword())) {
+            throw new BadCredentialsException(
+                    localizationUtils.getLocalizationMessage(MessageKeys.WRONG_PHONE_PASSWORD));
+        }
+
+        // Update user information based on the DTO
+        if (updatedUserDTO.getFullName() != null) {
+            user.setFullName(updatedUserDTO.getFullName());
+        }
+        if (newPhoneNumber != null) {
+            user.setPhoneNumber(newPhoneNumber);
+        }
+        if (updatedUserDTO.getAddress() != null) {
+            user.setAddress(updatedUserDTO.getAddress());
+        }
+        if (updatedUserDTO.getDateOfBirth() != null) {
+            user.setDateOfBirth(updatedUserDTO.getDateOfBirth());
+        }
+        if (updatedUserDTO.getFacebookAccountId() > 0) {
+            user.setFacebookAccountId(updatedUserDTO.getFacebookAccountId());
+        }
+        if (updatedUserDTO.getGoogleAccountId() > 0) {
+            user.setGoogleAccountId(updatedUserDTO.getGoogleAccountId());
+        }
+
+        // Update the password if it is provided in the DTO
+        if (updatedUserDTO.getPassword() != null
+                && !updatedUserDTO.getPassword().isEmpty()) {
+            if (!updatedUserDTO.getPassword().equals(updatedUserDTO.getRetypePassword())) {
+                throw new DataNotFoundException("Password and retype password not the same");
+            }
+            String newPassword = updatedUserDTO.getPassword();
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.setPassword(encodedPassword);
+        }
+        // Save the updated user
+        return userRepository.save(user);
     }
 
     @Override
     public Page<User> findAll(String keyword, Pageable pageable) throws Exception {
-        return null;
+        return userRepository.findAll(keyword, pageable);
     }
 
     @Override
-    public void resetPassword(Long userId, String newPassword) throws InvalidPasswordException, DataNotFoundException {}
-
-    @Override
-    public void blockOrEnable(Long userId, Boolean active) throws DataNotFoundException {}
-
-    @Override
-    public UserDtoResponse getMyDetailInfo(String token) throws Exception {
-        if (jwtTokenUtil.isTokenExpired(token)) {
-            throw new Exception("Token expired");
+    public void changePassword(User user, UserChangePasswordDTORequest request) throws Exception {
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new InvalidPasswordException(
+                    localizationUtils.getLocalizationMessage(MessageKeys.PASSWORD_NOT_MATCH));
         }
+        if (!request.getNewPassword().equals(request.getRetypeNewPassword())) {
+            throw new InvalidPasswordException(
+                    localizationUtils.getLocalizationMessage(MessageKeys.PASSWORD_NOT_MATCH));
+        }
+        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+        user.setPassword(encodedPassword);
+        userRepository.save(user);
+    }
 
-        String phoneNumber = jwtTokenUtils.extractPhoneNumber(token);
+    @Override
+    public void resetPassword(Long userId, String newPassword) throws InvalidPasswordException, DataNotFoundException {
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() ->
+                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+        userRepository.save(user);
+    }
 
-        Optional<User> user = userRepository.findByPhoneNumber(phoneNumber);
+    @Override
+    public void blockOrEnable(Long userId, Boolean active) throws DataNotFoundException {
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() ->
+                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+        user.setActive(active);
+        userRepository.save(user);
+    }
+
+    @Override
+    public UserDTOResponse getMyDetailInfo(String phone) throws Exception {
+
+        Optional<User> user = userRepository.findByPhoneNumber(phone);
 
         if (!user.get().isActive()) {
             throw new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.USER_IS_LOCKED));
         }
 
         if (user.isPresent()) {
-            return userMapper.toUserDtoResponse(user.get());
+            return userMapper.toUserDTOResponse(user.get());
         } else {
             throw new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }

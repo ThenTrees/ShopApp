@@ -1,0 +1,47 @@
+package com.example.shopapp.dtos.requests.user;
+
+import java.util.Date;
+
+import jakarta.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+public class UserUpdateDTORequest {
+    @JsonProperty("fullname")
+    String fullName;
+
+    @JsonProperty("phone_number")
+    @NotBlank(message = "Phone number is required")
+    String phoneNumber;
+
+    String address;
+
+    @NotBlank(message = "Password cannot be blank")
+    String password;
+
+    @JsonProperty("retype_password")
+    String retypePassword;
+
+    @JsonProperty("current_password")
+    String currentPassword;
+
+    @JsonProperty("date_of_birth")
+    Date dateOfBirth;
+
+    @JsonProperty("facebook_account_id")
+    int facebookAccountId;
+
+    @JsonProperty("google_account_id")
+    int googleAccountId;
+}

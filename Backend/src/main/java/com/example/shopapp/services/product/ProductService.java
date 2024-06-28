@@ -16,9 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.shopapp.dtos.requests.ProductDtoRequest;
-import com.example.shopapp.dtos.requests.ProductImageDtoRequest;
-import com.example.shopapp.dtos.responses.product.ProductDtoResponse;
+import com.example.shopapp.dtos.requests.product.ProductDTORequest;
+import com.example.shopapp.dtos.requests.product.ProductImageDTORequest;
+import com.example.shopapp.dtos.responses.product.ProductDTOResponse;
 import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.exceptions.InvalidParamException;
 import com.example.shopapp.mappers.ProductMapper;
@@ -44,7 +44,7 @@ public class ProductService implements IProductService {
 
     @Override
     @Transactional
-    public Product createProduct(ProductDtoRequest request) throws Exception {
+    public Product createProduct(ProductDTORequest request) throws Exception {
         Category existingCategory = categoryRepository
                 .findById(request.getCategoryId())
                 .orElseThrow(
@@ -64,16 +64,16 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public Page<ProductDtoResponse> getAllProducts(String keyword, Long categoryId, PageRequest pageRequest) {
+    public Page<ProductDTOResponse> getAllProducts(String keyword, Long categoryId, PageRequest pageRequest) {
         // Lấy danh sách sản phẩm theo trang (page), giới hạn (limit), và categoryId (nếu có)
         Page<Product> productsPage;
         productsPage = productRepository.searchProducts(categoryId, keyword, pageRequest);
-        return productsPage.map(ProductDtoResponse::fromProduct);
+        return productsPage.map(ProductDTOResponse::fromProduct);
     }
 
     @Override
     @Transactional
-    public Product updateProduct(long id, ProductDtoRequest request) throws Exception {
+    public Product updateProduct(long id, ProductDTORequest request) throws Exception {
         Product existingProduct = productRepository
                 .findById(id)
                 .orElseThrow(() -> new DataNotFoundException("Cannot find product with id = " + id));
@@ -103,6 +103,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
+    @Transactional
     public void deleteProduct(long id) {
         Optional<Product> optionalProduct = productRepository.findById(id);
         optionalProduct.ifPresent(productRepository::delete);
@@ -114,15 +115,16 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public ProductImage createProductImage(Long productId, ProductImageDtoRequest productImageDtoRequest)
+    @Transactional
+    public ProductImage createProductImage(Long productId, ProductImageDTORequest productImageDTORequest)
             throws Exception {
         Product existingProduct = productRepository
                 .findById(productId)
                 .orElseThrow(() -> new DataNotFoundException(
-                        "Cannot find product with id: " + productImageDtoRequest.getProductId()));
+                        "Cannot find product with id: " + productImageDTORequest.getProductId()));
         ProductImage newProductImage = ProductImage.builder()
                 .product(existingProduct)
-                .imageUrl(productImageDtoRequest.getImageUrl())
+                .imageUrl(productImageDTORequest.getImageUrl())
                 .build();
 
         // Ko cho insert quá 5 ảnh cho 1 sản phẩm
@@ -174,6 +176,7 @@ public class ProductService implements IProductService {
      * @throws IOException
      */
     @Override
+    @Transactional
     public void deleteFile(String filename) throws IOException {
         Path path = Paths.get("uploads", filename);
         if (Files.exists(path)) {

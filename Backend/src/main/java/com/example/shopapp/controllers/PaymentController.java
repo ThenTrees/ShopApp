@@ -3,6 +3,7 @@ package com.example.shopapp.controllers;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
+import com.example.shopapp.dtos.responses.PaymentDTOResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.websocket.server.PathParam;
 
@@ -31,8 +32,19 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.OK).body(paymentService.createPayment(price, orderId, req));
     }
 
-    @GetMapping
-    public String hello() {
-        return "Hello";
+    @GetMapping("/vn-pay-callback")
+    public ResponseEntity<ResponseObject> payCallbackHandler(HttpServletRequest request) {
+        String status = request.getParameter("vnp_ResponseCode");
+        if (status.equals("00")) {
+            return ResponseEntity.ok(ResponseObject.builder()
+                    .message("Success")
+                    .code(HttpStatus.OK.value())
+                    .build());
+        } else {
+            return ResponseEntity.ok(ResponseObject.builder()
+                    .message("Failed")
+                    .code(HttpStatus.OK.value())
+                    .build());
+        }
     }
 }

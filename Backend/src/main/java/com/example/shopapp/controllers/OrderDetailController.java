@@ -17,7 +17,6 @@ import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.order.OrderDetailDTORequest;
 import com.example.shopapp.dtos.responses.ResponseObject;
 import com.example.shopapp.dtos.responses.order.OrderDetailDTOResponse;
-import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.mappers.OrderDetailMapper;
 import com.example.shopapp.models.OrderDetail;
 import com.example.shopapp.services.orderdetail.IOrderDetailService;
@@ -47,19 +46,19 @@ public class OrderDetailController {
         return ResponseEntity.ok()
                 .body(ResponseObject.builder()
                         .message("Create order detail successfully")
-                        .status(HttpStatus.CREATED)
+                        .code(HttpStatus.CREATED.value())
                         .data(orderDetailResponse)
                         .build());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getOrderDetail(@Valid @PathVariable("id") Long id) throws DataNotFoundException {
+    public ResponseEntity<?> getOrderDetail(@Valid @PathVariable("id") Long id) {
         OrderDetail orderDetail = orderDetailService.getOrderDetail(id);
         OrderDetailDTOResponse orderDetailResponse = orderDetailMapper.toOrderDetailDTOResponse(orderDetail);
         return ResponseEntity.ok()
                 .body(ResponseObject.builder()
                         .message("Get order detail successfully")
-                        .status(HttpStatus.OK)
+                        .code(HttpStatus.OK.value())
                         .data(orderDetailResponse)
                         .build());
     }
@@ -73,7 +72,7 @@ public class OrderDetailController {
         return ResponseEntity.ok()
                 .body(ResponseObject.builder()
                         .message("Get order details by orderId successfully")
-                        .status(HttpStatus.OK)
+                        .code(HttpStatus.OK.value())
                         .data(orderDetailResponses)
                         .build());
     }
@@ -81,8 +80,7 @@ public class OrderDetailController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<ResponseObject> updateOrderDetail(
-            @Valid @PathVariable("id") Long id, @RequestBody OrderDetailDTORequest request)
-            throws DataNotFoundException, Exception {
+            @Valid @PathVariable("id") Long id, @RequestBody OrderDetailDTORequest request) throws Exception {
         OrderDetail orderDetail = orderDetailService.updateOrderDetail(id, request);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         log.info("phoneNumber: {}", authentication.getName());
@@ -90,7 +88,7 @@ public class OrderDetailController {
                 .body(ResponseObject.builder()
                         .data(orderDetail)
                         .message("Update order detail successfully")
-                        .status(HttpStatus.OK)
+                        .code(HttpStatus.OK.value())
                         .build());
     }
 
@@ -101,6 +99,7 @@ public class OrderDetailController {
         return ResponseEntity.ok()
                 .body(ResponseObject.builder()
                         .message(localizationUtils.getLocalizationMessage(MessageKeys.DELETE_ORDER_DETAIL_SUCCESSFULLY))
+                        .code(HttpStatus.OK.value())
                         .build());
     }
 }

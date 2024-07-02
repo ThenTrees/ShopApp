@@ -34,72 +34,57 @@ public class CommentController {
     @PostMapping
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<ResponseObject> createComment(@Valid @RequestBody CommentDTORequest commentDTORequest) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            User userLogin = (User) authentication.getPrincipal();
-            if (userLogin.getId() != commentDTORequest.getUserId()) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(ResponseObject.builder()
-                                .message("You are not allowed to comment on behalf of another user")
-                                .build());
-            }
-            CommentDTOResponse commentDTOResponse = commentService.insertComment(commentDTORequest);
-            return ResponseEntity.status(HttpStatus.CREATED)
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User userLogin = (User) authentication.getPrincipal();
+        if (userLogin.getId() != commentDTORequest.getUserId()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ResponseObject.builder()
-                            .message("Comment created successfully")
-                            .data(commentDTOResponse)
-                            .status(HttpStatus.CREATED)
+                            .message(localizationUtils.getLocalizationMessage(MessageKeys.COMMENT_FAIL))
                             .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(ResponseObject.builder().message("Error").build());
         }
+        CommentDTOResponse commentDTOResponse = commentService.insertComment(commentDTORequest);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ResponseObject.builder()
+                        .message(localizationUtils.getLocalizationMessage(MessageKeys.INSERT_COMMENT_SUCCESSFULLY))
+                        .data(commentDTOResponse)
+                        .code(HttpStatus.CREATED.value())
+                        .build());
     }
 
     @PutMapping("/{commentId}")
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<ResponseObject> updateComment(
             @PathVariable Long commentId, @RequestBody CommentUpdateDTORequest commentUpdateDTORequest) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            User userLogin = (User) authentication.getPrincipal();
-            CommentDTOResponse commentDTOResponse =
-                    commentService.updateComment(commentId, userLogin.getId(), commentUpdateDTORequest);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(ResponseObject.builder()
-                            .message("Comment updated successfully")
-                            .data(commentDTOResponse)
-                            .status(HttpStatus.OK)
-                            .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(ResponseObject.builder()
-                            .message(localizationUtils.getLocalizationMessage(MessageKeys.NOT_COMMENT))
-                            .build());
-        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User userLogin = (User) authentication.getPrincipal();
+        CommentDTOResponse commentDTOResponse =
+                commentService.updateComment(commentId, userLogin.getId(), commentUpdateDTORequest);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseObject.builder()
+                        .message(localizationUtils.getLocalizationMessage(MessageKeys.UPDATE_COMMENT_SUCCESSFULLY))
+                        .data(commentDTOResponse)
+                        .code(HttpStatus.OK.value())
+                        .build());
     }
 
     @DeleteMapping("/{commentId}")
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<ResponseObject> deleteComment(@PathVariable Long commentId) {
-        try {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User userLogin = (User) authentication.getPrincipal();
 
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            User userLogin = (User) authentication.getPrincipal();
+        boolean rs = commentService.deleteComment(commentId, userLogin);
 
-            boolean rs = commentService.deleteComment(commentId, userLogin);
-
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(ResponseObject.builder()
-                            .message(rs ? "Comment deleted successfully" : "Error, delete comment failed!!!")
-                            .status(HttpStatus.OK)
-                            .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(ResponseObject.builder()
-                            .message("Error, you don't policy delete other' comment!!!")
-                            .build());
-        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseObject.builder()
+                        .message(
+                                rs
+                                        ? localizationUtils.getLocalizationMessage(
+                                                MessageKeys.DELETE_COMMENT_SUCCESSFULLY)
+                                        : localizationUtils.getLocalizationMessage(MessageKeys.DELETE_COMMENT_FAIL))
+                        .code(HttpStatus.OK.value())
+                        .build());
     }
 
     @GetMapping("/product/{productId}")
@@ -107,7 +92,7 @@ public class CommentController {
         return ResponseEntity.ok(ResponseObject.builder()
                 .message("Get comments by product successfully")
                 .data(commentService.getCommentsByProduct(productId))
-                .status(HttpStatus.OK)
+                .code(HttpStatus.OK.value())
                 .build());
     }
 
@@ -120,7 +105,7 @@ public class CommentController {
         return ResponseEntity.ok(ResponseObject.builder()
                 .message("Get comments by product successfully")
                 .data(comments)
-                .status(HttpStatus.OK)
+                .code(HttpStatus.OK.value())
                 .build());
     }
 }

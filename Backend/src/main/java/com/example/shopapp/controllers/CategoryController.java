@@ -45,8 +45,8 @@ public class CategoryController {
                     .toList();
             return ResponseEntity.status(HttpStatus.OK)
                     .body(ResponseObject.builder()
-                            .message("Create category failed")
-                            .status(HttpStatus.BAD_REQUEST)
+                            .message(localizationUtils.getLocalizationMessage(MessageKeys.INSERT_CATEGORY_FAILED))
+                            .code(HttpStatus.BAD_REQUEST.value())
                             .build());
         }
         Category category = categoryService.createCategory(request);
@@ -54,20 +54,19 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseObject.builder()
                         .message(localizationUtils.getLocalizationMessage(MessageKeys.INSERT_CATEGORY_SUCCESSFULLY))
-                        .status(HttpStatus.OK)
+                        .code(HttpStatus.OK.value())
                         .data(categoryResponse)
                         .build());
     }
 
     // Hiện tất cả các categories
     @GetMapping
-    //    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<ResponseObject> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseObject.builder()
                         .message("Get list of categories successfully")
-                        .status(HttpStatus.OK)
+                        .code(HttpStatus.OK.value())
                         .data(categories)
                         .build());
     }
@@ -78,7 +77,7 @@ public class CategoryController {
         return ResponseEntity.ok(ResponseObject.builder()
                 .data(existingCategory)
                 .message("Get category information successfully")
-                .status(HttpStatus.OK)
+                .code(HttpStatus.OK.value())
                 .build());
     }
 
@@ -89,7 +88,7 @@ public class CategoryController {
         categoryService.updateCategory(id, categoryDto);
         return ResponseEntity.ok(ResponseObject.builder()
                 .message(localizationUtils.getLocalizationMessage(MessageKeys.UPDATE_CATEGORY_SUCCESSFULLY))
-                .status(HttpStatus.OK)
+                .code(HttpStatus.OK.value())
                 .data(categoryService.getCategoryById(id))
                 .build());
     }
@@ -99,7 +98,7 @@ public class CategoryController {
     public ResponseEntity<ResponseObject> deleteCategory(@PathVariable Long id) throws Exception {
         Category c = categoryService.deleteCategory(id);
         return ResponseEntity.ok(ResponseObject.builder()
-                .status(HttpStatus.OK)
+                .code(HttpStatus.OK.value())
                 .message(localizationUtils.getLocalizationMessage(MessageKeys.DELETE_CATEGORY_SUCCESSFULLY))
                 .data(c)
                 .build());

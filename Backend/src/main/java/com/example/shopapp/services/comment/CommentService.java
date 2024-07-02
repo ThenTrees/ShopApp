@@ -10,7 +10,7 @@ import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.comment.CommentDTORequest;
 import com.example.shopapp.dtos.requests.comment.CommentUpdateDTORequest;
 import com.example.shopapp.dtos.responses.comment.CommentDTOResponse;
-import com.example.shopapp.exceptions.DataNotFoundException;
+import com.example.shopapp.exceptions.ResourceNotFoundException;
 import com.example.shopapp.mappers.CommentMapper;
 import com.example.shopapp.models.Comment;
 import com.example.shopapp.models.Product;
@@ -35,23 +35,17 @@ public class CommentService implements ICommentService {
 
     @Override
     @Transactional
-    public CommentDTOResponse insertComment(CommentDTORequest commentDTORequest) throws DataNotFoundException {
+    public CommentDTOResponse insertComment(CommentDTORequest commentDTORequest) throws ResourceNotFoundException {
 
         Product product = productRepository
                 .findById(commentDTORequest.getProductId())
                 .orElseThrow(() ->
-                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
 
         User user = userRepository
                 .findById(commentDTORequest.getUserId())
                 .orElseThrow(() ->
-                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
-
-        //        Comment comment = Comment.builder()
-        //                .content(commentDTORequest.getComment())
-        //                .product(product)
-        //                .user(user)
-        //                .build();
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
 
         Comment comment = commentMapper.toComment(commentDTORequest);
         comment.setProduct(product);
@@ -81,14 +75,14 @@ public class CommentService implements ICommentService {
     @Override
     @Transactional
     public CommentDTOResponse updateComment(
-            Long commentId, Long userId, CommentUpdateDTORequest commentUpdateDTORequest) throws DataNotFoundException {
+            Long commentId, Long userId, CommentUpdateDTORequest commentUpdateDTORequest) {
         Comment comment = commentRepository
                 .findById(commentId)
                 .orElseThrow(() ->
-                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
 
         if (!comment.getUser().getId().equals(userId)) {
-            throw new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
+            throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }
 
         comment.setContent(commentUpdateDTORequest.getContent());

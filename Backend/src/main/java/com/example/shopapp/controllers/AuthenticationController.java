@@ -49,54 +49,45 @@ public class AuthenticationController {
             List<String> errorMessages = result.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .toList();
-
             return ResponseEntity.badRequest()
                     .body(ResponseObject.builder()
-                            .status(HttpStatus.BAD_REQUEST)
+                            .code(HttpStatus.BAD_REQUEST.value())
                             .data(null)
                             .message(errorMessages.toString())
                             .build());
         }
 
         if (!request.getPassword().equals(request.getRetypePassword())) {
-            // registerResponse.setMessage();
             return ResponseEntity.badRequest()
                     .body(ResponseObject.builder()
-                            .status(HttpStatus.BAD_REQUEST)
+                            .code(HttpStatus.BAD_REQUEST.value())
                             .data(null)
-                            .message("error")
+                            .message(localizationUtils.getLocalizationMessage(MessageKeys.PASSWORD_NOT_MATCH))
                             .build());
         }
         User user = userService.createUser(request);
         return ResponseEntity.ok(ResponseObject.builder()
-                .status(HttpStatus.CREATED)
+                .code(HttpStatus.CREATED.value())
                 .data(userMapper.toUserDTOResponse(user))
-                .message("Đăng ký tài khoản thành công")
+                .message(localizationUtils.getLocalizationMessage(MessageKeys.REGISTER_SUCCESSFULLY))
                 .build());
     }
 
     @PostMapping("/login")
     public ResponseEntity<UserLoginDTOResponse> login(
-            @Valid @RequestBody LoginDTORequest loginDto, HttpServletRequest request) {
-        try {
-            //            String token = userService.login(loginDto.getPhoneNumber(), loginDto.getPassword(),
-            // loginDto.getRoleId());
-            String userAgent = request.getHeader("User-Agent");
-            String token = userService.login(loginDto.getPhoneNumber(), loginDto.getPassword(), loginDto.getRoleId());
-            User user = userService.getUserDetailsFromToken(token);
+            @Valid @RequestBody LoginDTORequest loginDto, HttpServletRequest request) throws Exception {
+        //            String token = userService.login(loginDto.getPhoneNumber(), loginDto.getPassword(),
+        // loginDto.getRoleId());
+        String userAgent = request.getHeader("User-Agent");
+        String token = userService.login(loginDto.getPhoneNumber(), loginDto.getPassword(), loginDto.getRoleId());
+        User user = userService.getUserDetailsFromToken(token);
 
-            Token jwtToken = tokenService.addToken(user, token, isMobile(userAgent));
-            return ResponseEntity.ok(UserLoginDTOResponse.builder()
-                    .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_SUCCESSFULLY))
-                    .token(jwtToken.getToken())
-                    .refreshToken(jwtToken.getRefreshToken())
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(UserLoginDTOResponse.builder()
-                            .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
-                            .build());
-        }
+        Token jwtToken = tokenService.addToken(user, token, isMobile(userAgent));
+        return ResponseEntity.ok(UserLoginDTOResponse.builder()
+                .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_SUCCESSFULLY))
+                .token(jwtToken.getToken())
+                .refreshToken(jwtToken.getRefreshToken())
+                .build());
     }
 
     private boolean isMobile(String userAgent) {
@@ -105,18 +96,13 @@ public class AuthenticationController {
 
     @PostMapping("/refresh-token")
     public UserLoginDTOResponse refreshToken(@RequestBody RefreshTokenDTORequest request) throws Exception {
-        try {
-            User user = userService.getUserDetailsFromRefreshToken(request.getRefreshToken());
-            Token jwtToken = tokenService.refreshToken(request.getRefreshToken(), user);
-            return UserLoginDTOResponse.builder()
-                    .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_SUCCESSFULLY))
-                    .token(jwtToken.getToken())
-                    .refreshToken(jwtToken.getRefreshToken())
-                    .build();
-        } catch (Exception e) {
-            return UserLoginDTOResponse.builder()
-                    .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
-                    .build();
-        }
+
+        User user = userService.getUserDetailsFromRefreshToken(request.getRefreshToken());
+        Token jwtToken = tokenService.refreshToken(request.getRefreshToken(), user);
+        return UserLoginDTOResponse.builder()
+                .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_SUCCESSFULLY))
+                .token(jwtToken.getToken())
+                .refreshToken(jwtToken.getRefreshToken())
+                .build();
     }
 }

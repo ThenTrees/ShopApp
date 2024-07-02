@@ -14,6 +14,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.order.OrderDtoRequest;
 import com.example.shopapp.dtos.responses.ResponseObject;
 import com.example.shopapp.dtos.responses.order.OrderDTOResponse;
@@ -21,6 +22,7 @@ import com.example.shopapp.dtos.responses.order.OrderListResponse;
 import com.example.shopapp.mappers.OrderMapper;
 import com.example.shopapp.models.Order;
 import com.example.shopapp.services.order.IOrderService;
+import com.example.shopapp.utils.MessageKeys;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ import lombok.experimental.FieldDefaults;
 public class OrderController {
     IOrderService orderService;
     OrderMapper orderMapper;
+    private final LocalizationUtils localizationUtils;
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
@@ -45,15 +48,15 @@ public class OrderController {
             return ResponseEntity.badRequest()
                     .body(ResponseObject.builder()
                             .message(String.join(";", errorMessages))
-                            .status(HttpStatus.BAD_REQUEST)
+                            .code(HttpStatus.BAD_REQUEST.value())
                             .build());
         }
         Order order = orderService.createOrder(request);
-        OrderDTOResponse orderResponse =  OrderDTOResponse.fromOrder(order);
+        OrderDTOResponse orderResponse = OrderDTOResponse.fromOrder(order);
         return ResponseEntity.ok(ResponseObject.builder()
                 .message("Insert order successfully")
                 .data(orderResponse)
-                .status(HttpStatus.CREATED)
+                .code(HttpStatus.CREATED.value())
                 .build());
     }
 
@@ -63,8 +66,8 @@ public class OrderController {
         // xóa mềm => cập nhật trường active = false
         orderService.deleteOrder(id);
         return ResponseEntity.ok(ResponseObject.builder()
-                .message("Xoá thành công")
-                .status(HttpStatus.OK)
+                .message(localizationUtils.getLocalizationMessage(MessageKeys.DELETE_ORDER_SUCCESSFULLY))
+                .code(HttpStatus.OK.value())
                 .build());
     }
 
@@ -80,7 +83,7 @@ public class OrderController {
         return ResponseEntity.ok(ResponseObject.builder()
                 .message("Get list of orders successfully")
                 .data(orders)
-                .status(HttpStatus.OK)
+                .code(HttpStatus.OK.value())
                 .build());
     }
     // GET http://localhost:8088/api/v1/orders/2
@@ -89,14 +92,22 @@ public class OrderController {
         Order existingOrder = orderService.getOrder(orderId);
         OrderDTOResponse orderResponse = OrderDTOResponse.fromOrder(existingOrder);
         //        OrderDTOResponse orderResponse = orderMapper.toOrderDTOResponse(existingOrder);
-        return ResponseEntity.ok(new ResponseObject("Get order successfully", HttpStatus.OK, orderResponse));
+        return ResponseEntity.ok(ResponseObject.builder()
+                .message("Get order successfully")
+                .data(orderResponse)
+                .code(HttpStatus.OK.value())
+                .build());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject> updateOrder(
             @Valid @PathVariable long id, @Valid @RequestBody OrderDtoRequest orderDTO) throws Exception {
         Order order = orderService.updateOrder(id, orderDTO);
-        return ResponseEntity.ok(new ResponseObject("Update order successfully", HttpStatus.OK, order));
+        return ResponseEntity.ok(ResponseObject.builder()
+                .message("Get order successfully")
+                .data(order)
+                .code(HttpStatus.OK.value())
+                .build());
     }
 
     @GetMapping("/get-orders-by-keyword")

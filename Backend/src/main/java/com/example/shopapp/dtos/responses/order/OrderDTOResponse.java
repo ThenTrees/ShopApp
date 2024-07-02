@@ -58,7 +58,6 @@ public class OrderDTOResponse {
     @JsonProperty("payment_method")
     String paymentMethod;
 
-
     @JsonProperty("order_details")
     List<OrderDetail> orderDetails;
     //    List<OrderDetailDTOResponse> orderDetailsDTOResponse;

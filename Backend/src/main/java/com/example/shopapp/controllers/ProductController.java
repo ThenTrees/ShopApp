@@ -20,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.product.ProductDTORequest;
 import com.example.shopapp.dtos.requests.product.ProductImageDTORequest;
 import com.example.shopapp.dtos.responses.ResponseObject;
@@ -29,6 +30,7 @@ import com.example.shopapp.models.Product;
 import com.example.shopapp.models.ProductImage;
 import com.example.shopapp.services.product.IProductService;
 import com.example.shopapp.services.product.redis.IProductRedisService;
+import com.example.shopapp.utils.MessageKeys;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.javafaker.Faker;
 
@@ -44,6 +46,7 @@ public class ProductController {
     IProductService productService;
     IProductRedisService productRedisService;
     Logger logger = Logger.getLogger(ProductController.class.getName());
+    private final LocalizationUtils localizationUtils;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -51,7 +54,7 @@ public class ProductController {
             throws Exception {
         return ResponseEntity.ok(ResponseObject.builder()
                 .message("Create product successfully")
-                .status(HttpStatus.CREATED)
+                .code(HttpStatus.CREATED.value())
                 .data(productService.createProduct(request))
                 .build());
     }
@@ -98,7 +101,7 @@ public class ProductController {
         return ResponseEntity.ok(ResponseObject.builder()
                 .data(existingProduct)
                 .message("Get detail product successfully")
-                .status(HttpStatus.OK)
+                .code(HttpStatus.BAD_REQUEST.value())
                 .build());
     }
 
@@ -108,7 +111,7 @@ public class ProductController {
         productService.deleteProduct(id);
         return ResponseEntity.ok(ResponseObject.builder()
                 .message(String.format("Product with id = %d deleted successfully", id))
-                .status(HttpStatus.OK)
+                .code(HttpStatus.NO_CONTENT.value())
                 .build());
     }
 
@@ -121,7 +124,7 @@ public class ProductController {
         return ResponseEntity.ok(ResponseObject.builder()
                 .data(updatedProduct)
                 .message("Update product successfully")
-                .status(HttpStatus.OK)
+                .code(HttpStatus.NO_CONTENT.value())
                 .build());
     }
 
@@ -136,7 +139,7 @@ public class ProductController {
             return ResponseEntity.badRequest()
                     .body(ResponseObject.builder()
                             .message("Cannot upload more than 5 images")
-                            .status(HttpStatus.BAD_REQUEST)
+                            .code(HttpStatus.BAD_REQUEST.value())
                             .build());
         }
 
@@ -149,8 +152,8 @@ public class ProductController {
             if (file.getSize() > 10 * 1024 * 1024) {
                 return ResponseEntity.badRequest()
                         .body(ResponseObject.builder()
-                                .message("Cannot upload image with size > 10MB")
-                                .status(HttpStatus.BAD_REQUEST)
+                                .message(localizationUtils.getLocalizationMessage(MessageKeys.UPLOAD_IMAGES_FILE_LARGE))
+                                .code(HttpStatus.BAD_REQUEST.value())
                                 .build());
             }
 
@@ -158,8 +161,9 @@ public class ProductController {
             if (contentType == null || !contentType.startsWith("image/")) {
                 return ResponseEntity.badRequest()
                         .body(ResponseObject.builder()
-                                .message("Only image files are allowed")
-                                .status(HttpStatus.BAD_REQUEST)
+                                .message(localizationUtils.getLocalizationMessage(
+                                        MessageKeys.UPLOAD_IMAGES_FILE_MUST_BE_IMAGE))
+                                .code(HttpStatus.BAD_REQUEST.value())
                                 .build());
             }
 
@@ -174,7 +178,7 @@ public class ProductController {
         return ResponseEntity.ok()
                 .body(ResponseObject.builder()
                         .message("Upload image successfully")
-                        .status(HttpStatus.CREATED)
+                        .code(HttpStatus.CREATED.value())
                         .data(productImages)
                         .build());
     }
@@ -199,24 +203,20 @@ public class ProductController {
         return ResponseEntity.ok(ResponseObject.builder()
                 .message("Insert fake products succcessfully")
                 .data(null)
-                .status(HttpStatus.OK)
+                .code(HttpStatus.CREATED.value())
                 .build());
     }
 
     @GetMapping("images/{filename}")
     public ResponseEntity<?> viewImage(@PathVariable String filename) throws Exception {
-        try {
-            Path imagePath = Paths.get("uploads/" + filename);
-            UrlResource resource = new UrlResource(imagePath.toUri());
-            if (resource.exists()) {
-                return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(resource);
-            } else {
-                return ResponseEntity.ok()
-                        .contentType(MediaType.IMAGE_JPEG)
-                        .body(new UrlResource(Paths.get("uploads/notfound.jpeg").toUri()));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+        Path imagePath = Paths.get("uploads/" + filename);
+        UrlResource resource = new UrlResource(imagePath.toUri());
+        if (resource.exists()) {
+            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(resource);
+        } else {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(new UrlResource(Paths.get("uploads/notfound.jpeg").toUri()));
         }
     }
 
@@ -228,7 +228,7 @@ public class ProductController {
         List<Product> products = productService.findProductsByIds(productIds);
         return ResponseEntity.ok(ResponseObject.builder()
                 .message("Get products by ids successfully")
-                .status(HttpStatus.OK)
+                .code(HttpStatus.OK.value())
                 .data(products)
                 .build());
     }

@@ -7,8 +7,6 @@ import com.example.shopapp.dtos.requests.user.UserChangePasswordDTORequest;
 import com.example.shopapp.dtos.requests.user.UserDTORequest;
 import com.example.shopapp.dtos.requests.user.UserUpdateDTORequest;
 import com.example.shopapp.dtos.responses.user.UserDTOResponse;
-import com.example.shopapp.exceptions.DataNotFoundException;
-import com.example.shopapp.exceptions.InvalidPasswordException;
 import com.example.shopapp.models.User;
 
 public interface IUserService {
@@ -24,9 +22,9 @@ public interface IUserService {
 
     Page<User> findAll(String keyword, Pageable pageable) throws Exception;
 
-    void resetPassword(Long userId, String newPassword) throws InvalidPasswordException, DataNotFoundException;
+    void resetPassword(Long userId, String newPassword);
 
-    public void blockOrEnable(Long userId, Boolean active) throws DataNotFoundException;
+    public void blockOrEnable(Long userId, Boolean active);
 
     UserDTOResponse getMyDetailInfo(String phone) throws Exception;
 

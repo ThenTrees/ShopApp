@@ -13,6 +13,7 @@ import com.example.shopapp.models.Token;
 import com.example.shopapp.models.User;
 import com.example.shopapp.repositories.TokenRepository;
 import com.example.shopapp.repositories.UserRepository;
+import com.example.shopapp.utils.MessageKeys;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -86,7 +87,7 @@ public class TokenService implements ITokenService {
 
         if (tokenEntity.getRefreshExpirationDate().isBefore(LocalDateTime.now())) {
             tokenRepository.delete(tokenEntity);
-            throw new RuntimeException(localizationUtils.getLocalizationMessage("token.expired"));
+            throw new RuntimeException(localizationUtils.getLocalizationMessage(MessageKeys.TOKEN_EXPISTRING));
         }
 
         String newAccessToken = jwtTokenUtils.generateToken(user);

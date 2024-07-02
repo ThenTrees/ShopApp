@@ -36,7 +36,7 @@ public class ProductImageController {
                 .body(ResponseObject.builder()
                         .message("Delete product image successfully")
                         .data(productImage)
-                        .status(HttpStatus.OK)
+                        .code(HttpStatus.OK.value())
                         .build());
     }
 }

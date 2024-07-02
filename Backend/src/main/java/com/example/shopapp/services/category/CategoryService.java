@@ -2,15 +2,17 @@ package com.example.shopapp.services.category;
 
 import java.util.List;
 
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.category.CategoryDTORequest;
+import com.example.shopapp.exceptions.ResourceNotFoundException;
 import com.example.shopapp.models.Category;
 import com.example.shopapp.models.Product;
 import com.example.shopapp.repositories.CategoryRepository;
 import com.example.shopapp.repositories.ProductRepository;
+import com.example.shopapp.utils.MessageKeys;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class CategoryService implements ICategoryService {
 
     CategoryRepository categoryRepository;
     ProductRepository productRepository;
+    LocalizationUtils localizationUtils;
 
     @Override
     @Transactional
@@ -33,8 +36,11 @@ public class CategoryService implements ICategoryService {
     }
 
     @Override
-    public Category getCategoryById(long id) {
-        return categoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Category not found"));
+    public Category getCategoryById(long id) throws ResourceNotFoundException {
+        return categoryRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
     }
 
     @Override
@@ -53,13 +59,15 @@ public class CategoryService implements ICategoryService {
 
     @Override
     @Transactional
-    public Category deleteCategory(long id) throws Exception {
-        Category category =
-                categoryRepository.findById(id).orElseThrow(() -> new ChangeSetPersister.NotFoundException());
+    public Category deleteCategory(long id) throws IllegalStateException {
+        Category category = categoryRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
 
         List<Product> products = productRepository.findByCategory(category);
         if (!products.isEmpty()) {
-            throw new IllegalStateException("Cannot delete category with associated products");
+            throw new IllegalStateException(localizationUtils.getLocalizationMessage(MessageKeys.CAN_NOT_DELETE));
         } else {
             categoryRepository.deleteById(id);
             return category;

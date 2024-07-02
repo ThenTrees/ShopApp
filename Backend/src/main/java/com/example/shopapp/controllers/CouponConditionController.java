@@ -29,7 +29,7 @@ public class CouponConditionController {
                 .body(ResponseObject.builder()
                         .message("Create coupon condition successfully")
                         .data(couponConditionService.createCouponCondition(couponDTORequest))
-                        .status(HttpStatus.CREATED)
+                        .code(HttpStatus.CREATED.value())
                         .build());
     }
 }

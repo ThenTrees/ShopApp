@@ -5,8 +5,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.order.OrderDetailDTORequest;
-import com.example.shopapp.exceptions.DataNotFoundException;
+import com.example.shopapp.exceptions.ResourceNotFoundException;
 import com.example.shopapp.mappers.OrderDetailMapper;
 import com.example.shopapp.models.Order;
 import com.example.shopapp.models.OrderDetail;
@@ -14,6 +15,7 @@ import com.example.shopapp.models.Product;
 import com.example.shopapp.repositories.OrderDetailRepository;
 import com.example.shopapp.repositories.OrderRepository;
 import com.example.shopapp.repositories.ProductRepository;
+import com.example.shopapp.utils.MessageKeys;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class OrderDetailService implements IOrderDetailService {
     OrderRepository orderRepository;
     ProductRepository productRepository;
     OrderDetailMapper orderDetailMapper;
+    LocalizationUtils localizationUtils;
 
     @Override
     @Transactional
@@ -35,11 +38,13 @@ public class OrderDetailService implements IOrderDetailService {
         // tìm xem orderId có tồn tại ko
         Order order = orderRepository
                 .findById(request.getOrderId())
-                .orElseThrow(() -> new DataNotFoundException("Cannot find Order with id : " + request.getOrderId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         // Tìm Product theo id
         Product product = productRepository
                 .findById(request.getProductId())
-                .orElseThrow(() -> new DataNotFoundException("Cannot find product with id: " + request.getProductId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         // tạo mới orderDetail từ request và lưu vào db
         // lưu vào db
         OrderDetail od = orderDetailMapper.toOrderDetail(request);
@@ -49,24 +54,28 @@ public class OrderDetailService implements IOrderDetailService {
     }
 
     @Override
-    public OrderDetail getOrderDetail(Long id) throws DataNotFoundException {
+    public OrderDetail getOrderDetail(Long id) {
         return orderDetailRepository
                 .findById(id)
-                .orElseThrow(() -> new DataNotFoundException("Cannot find OrderDetail with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
     }
 
     @Override
-    public OrderDetail updateOrderDetail(Long id, OrderDetailDTORequest request) throws DataNotFoundException {
+    public OrderDetail updateOrderDetail(Long id, OrderDetailDTORequest request) {
         // tìm xem order detail có tồn tại ko đã
         OrderDetail existingOrderDetail = orderDetailRepository
                 .findById(id)
-                .orElseThrow(() -> new DataNotFoundException("Cannot find order detail with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         Order existingOrder = orderRepository
                 .findById(request.getOrderId())
-                .orElseThrow(() -> new DataNotFoundException("Cannot find order with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         Product existingProduct = productRepository
                 .findById(request.getProductId())
-                .orElseThrow(() -> new DataNotFoundException("Cannot find product with id: " + request.getProductId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
 
         orderDetailMapper.updateOrderDetailFromDto(existingOrderDetail, request);
         existingOrderDetail.setOrder(existingOrder);

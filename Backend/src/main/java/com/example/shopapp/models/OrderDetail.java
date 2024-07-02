@@ -43,8 +43,8 @@ public class OrderDetail {
     //    @Column(name = "color")
     //    String color;
 
-        @ManyToOne
-        @JoinColumn(name = "coupon_id")
-        @JsonBackReference
-         Coupon coupon;
+    @ManyToOne
+    @JoinColumn(name = "coupon_id")
+    @JsonBackReference
+    Coupon coupon;
 }

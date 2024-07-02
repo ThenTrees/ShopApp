@@ -6,13 +6,17 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.coupon.CouponDTORequest;
 import com.example.shopapp.dtos.responses.coupon.CouponDTOResponse;
+import com.example.shopapp.exceptions.InvalidDataException;
+import com.example.shopapp.exceptions.ResourceNotFoundException;
 import com.example.shopapp.mappers.CouponMapper;
 import com.example.shopapp.models.Coupon;
 import com.example.shopapp.models.CouponCondition;
 import com.example.shopapp.repositories.CouponConditionRepository;
 import com.example.shopapp.repositories.CouponRepository;
+import com.example.shopapp.utils.MessageKeys;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +30,7 @@ public class CouponService implements ICouponService {
     CouponRepository couponRepository;
     CouponConditionRepository couponConditionRepository;
     CouponMapper couponMapper;
+    LocalizationUtils localizationUtils;
 
     @Override
     @Transactional
@@ -34,28 +39,17 @@ public class CouponService implements ICouponService {
         Coupon existingCoupon =
                 couponRepository.findByCode(couponDTORequest.getCode()).orElse(null);
         if (existingCoupon != null) {
-            throw new RuntimeException("Coupon already exists");
+            throw new InvalidDataException(localizationUtils.getLocalizationMessage(MessageKeys.COUPON_ALREADY_EXISTS));
         }
 
         if (couponDTORequest.getStartDate().isAfter(couponDTORequest.getEndDate())) {
-            throw new RuntimeException("Start date must be before end date");
+            throw new InvalidDataException(localizationUtils.getLocalizationMessage(MessageKeys.DATE_IS_BEFORE));
         }
 
         if (couponDTORequest.getQuantity() < 0) {
-            throw new RuntimeException("Quantity must be greater than 0");
+            throw new InvalidDataException(localizationUtils.getLocalizationMessage(MessageKeys.INVALID_QUANTITY));
         }
 
-        if (couponDTORequest.getQuantityUsed() < 0) {
-            throw new RuntimeException("Quantity used must be greater than 0");
-        }
-
-        if (couponDTORequest.getQuantityUsed() > couponDTORequest.getQuantity()) {
-            throw new RuntimeException("Quantity used must be less than quantity");
-        }
-
-        if (couponDTORequest.getStartDate().isBefore(LocalDate.now())) {
-            throw new RuntimeException("Start date must be after current date");
-        }
         Coupon coupon = couponMapper.toCoupon(couponDTORequest);
         couponRepository.save(coupon);
         return couponMapper.fromCoupon(coupon);
@@ -67,13 +61,13 @@ public class CouponService implements ICouponService {
     }
 
     @Override
-    public double calculateDiscount(String couponCode, double totalAmount) {
+    public double calculateDiscount(String couponCode, double totalAmount) throws RuntimeException {
         Coupon coupon = couponRepository.findByCode(couponCode).orElse(null);
         if (coupon == null) {
-            throw new RuntimeException("Coupon not found");
+            throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }
         if (!coupon.isActive()) {
-            throw new RuntimeException("Coupon is not active");
+            throw new RuntimeException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_ACTIVE));
         }
         double discount = calculateDiscount(coupon, totalAmount);
         return totalAmount - discount;
@@ -121,7 +115,7 @@ public class CouponService implements ICouponService {
     public void deleteCoupon(Long id) {
         Coupon coupon = getCouponById(id);
         if (coupon == null) {
-            throw new RuntimeException("Coupon not found");
+            throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }
         coupon.setActive(false);
     }

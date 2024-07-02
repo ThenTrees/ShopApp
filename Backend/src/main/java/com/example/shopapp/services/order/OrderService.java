@@ -4,9 +4,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.shopapp.dtos.responses.order.OrderDTOResponse;
-import com.example.shopapp.repositories.*;
-import com.example.shopapp.services.coupon.CouponService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,9 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.order.CartItemDTORequest;
 import com.example.shopapp.dtos.requests.order.OrderDtoRequest;
-import com.example.shopapp.exceptions.DataNotFoundException;
+import com.example.shopapp.exceptions.ResourceNotFoundException;
 import com.example.shopapp.mappers.OrderMapper;
 import com.example.shopapp.models.*;
+import com.example.shopapp.repositories.*;
+import com.example.shopapp.services.coupon.CouponService;
 import com.example.shopapp.utils.MessageKeys;
 
 import lombok.AccessLevel;
@@ -36,12 +35,14 @@ public class OrderService implements IOrderService {
     OrderDetailRepository orderDetailRepository;
     CouponRepository couponRepository;
     CouponService couponService;
+
     @Override
     @Transactional
-    public Order createOrder(OrderDtoRequest orderRequest) throws Exception {
+    public Order createOrder(OrderDtoRequest orderRequest) throws ResourceNotFoundException {
         User user = userRepository
                 .findById(orderRequest.getUserId())
-                .orElseThrow(() -> new DataNotFoundException("Cannot find user with id: " + orderRequest.getUserId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
 
         Order order = orderMapper.toOrder(orderRequest);
         order.setUser(user);
@@ -51,12 +52,13 @@ public class OrderService implements IOrderService {
         LocalDate shippingDate =
                 orderRequest.getShippingDate() == null ? LocalDate.now() : orderRequest.getShippingDate();
         if (shippingDate.isBefore(LocalDate.now())) {
-            throw new DataNotFoundException("Date must be at least today !");
+            throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }
         order.setShippingDate(shippingDate);
         order.setActive(true);
 
-        Coupon coupon = couponRepository.findByCode(orderRequest.getCouponCode()).orElse(null);
+        Coupon coupon =
+                couponRepository.findByCode(orderRequest.getCouponCode()).orElse(null);
         double totalMoney = 0.0;
 
         List<OrderDetail> orderDetails = new ArrayList<>();
@@ -68,8 +70,8 @@ public class OrderService implements IOrderService {
             // lấy thông tin sản phẩm từ cart item
             Product product = productRepository
                     .findById(cartItemDto.getProductId())
-                    .orElseThrow(() ->
-                            new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
 
             int quantity = cartItemDto.getQuantity();
 
@@ -80,12 +82,12 @@ public class OrderService implements IOrderService {
             orderDetail.setPrice(product.getPrice());
             //            orderDetail.setTotalMoney(product.getPrice() * quantity);
             orderDetail.setTotal_money(product.getPrice() * quantity);
-            totalMoney+=product.getPrice() * quantity;
+            totalMoney += product.getPrice() * quantity;
             // lưu order detail
             orderDetails.add(orderDetail);
         }
-        if(coupon != null) {
-             totalMoney = couponService.calculateDiscount(coupon.getCode(), totalMoney);
+        if (coupon != null) {
+            totalMoney = couponService.calculateDiscount(coupon.getCode(), totalMoney);
             order.setTotalMoney(totalMoney);
         } else {
             order.setTotalMoney(totalMoney);
@@ -103,13 +105,15 @@ public class OrderService implements IOrderService {
 
     @Override
     @Transactional
-    public Order updateOrder(Long id, OrderDtoRequest orderDTORequest) throws DataNotFoundException {
+    public Order updateOrder(Long id, OrderDtoRequest orderDTORequest) throws ResourceNotFoundException {
         Order order = orderRepository
                 .findById(id)
-                .orElseThrow(() -> new DataNotFoundException("Cannot find order with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         User existingUser = userRepository
                 .findById(orderDTORequest.getUserId())
-                .orElseThrow(() -> new DataNotFoundException("Cannot find user with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         // Tạo một luồng bảng ánh xạ riêng để kiểm soát việc ánh xạ
         orderMapper.toOrder(orderDTORequest);
         order.setUser(existingUser);

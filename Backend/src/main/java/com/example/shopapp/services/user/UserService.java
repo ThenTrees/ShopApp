@@ -18,9 +18,8 @@ import com.example.shopapp.dtos.requests.user.UserChangePasswordDTORequest;
 import com.example.shopapp.dtos.requests.user.UserDTORequest;
 import com.example.shopapp.dtos.requests.user.UserUpdateDTORequest;
 import com.example.shopapp.dtos.responses.user.UserDTOResponse;
-import com.example.shopapp.exceptions.DataNotFoundException;
-import com.example.shopapp.exceptions.InvalidPasswordException;
-import com.example.shopapp.exceptions.PermissionDenyException;
+import com.example.shopapp.exceptions.InvalidDataException;
+import com.example.shopapp.exceptions.ResourceNotFoundException;
 import com.example.shopapp.mappers.UserMapper;
 import com.example.shopapp.models.Role;
 import com.example.shopapp.models.Token;
@@ -60,10 +59,10 @@ public class UserService implements IUserService {
         }
         Role role = roleRepository
                 .findById(request.getRoleId())
-                .orElseThrow(() -> new DataNotFoundException(
-                        localizationUtils.getLocalizationMessage(MessageKeys.ROLE_DOES_NOT_EXISTS)));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         if (role.getName().toUpperCase().equals(Role.ADMIN)) {
-            throw new PermissionDenyException("Không được phép đăng ký tài khoản Admin");
+            throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }
 
         User newUser = userMapper.toUser(request);
@@ -82,11 +81,11 @@ public class UserService implements IUserService {
     public String login(String phoneNumber, String password, Long roleId) throws Exception {
         Optional<User> existUser = userRepository.findByPhoneNumber(phoneNumber);
         if (existUser.isEmpty()) {
-            throw new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.WRONG_PHONE_PASSWORD));
+            throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }
 
         if (!existUser.get().isActive()) {
-            throw new DataNotFoundException("Account is not active");
+            throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }
 
         if (existUser.get().getFacebookAccountId() == 0 && existUser.get().getGoogleAccountId() == 0) {
@@ -109,7 +108,7 @@ public class UserService implements IUserService {
         User user = userRepository
                 .findByPhoneNumber(phone)
                 .orElseThrow(() ->
-                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         return user;
     }
 
@@ -117,7 +116,7 @@ public class UserService implements IUserService {
     public User getUserDetailsFromRefreshToken(String token) throws Exception {
         Token existingToken = tokenRepository.findByRefreshToken(token);
         if (existingToken == null) {
-            throw new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
+            throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }
         return getUserDetailsFromToken(existingToken.getToken());
     }
@@ -129,12 +128,13 @@ public class UserService implements IUserService {
         User user = userRepository
                 .findById(userId)
                 .orElseThrow(() ->
-                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
 
         // Check if the phone number is being changed and if it already exists for another user
         String newPhoneNumber = updatedUserDTO.getPhoneNumber();
         if (!user.getPhoneNumber().equals(newPhoneNumber) && userRepository.existsByPhoneNumber(newPhoneNumber)) {
-            throw new DataIntegrityViolationException("Phone number already exists");
+            throw new DataIntegrityViolationException(
+                    localizationUtils.getLocalizationMessage((MessageKeys.PHONE_EXISTED)));
         }
 
         // check if the current password is correct-> process update
@@ -167,7 +167,8 @@ public class UserService implements IUserService {
         if (updatedUserDTO.getPassword() != null
                 && !updatedUserDTO.getPassword().isEmpty()) {
             if (!updatedUserDTO.getPassword().equals(updatedUserDTO.getRetypePassword())) {
-                throw new DataNotFoundException("Password and retype password not the same");
+                throw new ResourceNotFoundException(
+                        localizationUtils.getLocalizationMessage(MessageKeys.PASSWORD_NOT_MATCH));
             }
             String newPassword = updatedUserDTO.getPassword();
             String encodedPassword = passwordEncoder.encode(newPassword);
@@ -185,12 +186,10 @@ public class UserService implements IUserService {
     @Override
     public void changePassword(User user, UserChangePasswordDTORequest request) throws Exception {
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new InvalidPasswordException(
-                    localizationUtils.getLocalizationMessage(MessageKeys.PASSWORD_NOT_MATCH));
+            throw new InvalidDataException(localizationUtils.getLocalizationMessage(MessageKeys.PASSWORD_NOT_MATCH));
         }
         if (!request.getNewPassword().equals(request.getRetypeNewPassword())) {
-            throw new InvalidPasswordException(
-                    localizationUtils.getLocalizationMessage(MessageKeys.PASSWORD_NOT_MATCH));
+            throw new InvalidDataException(localizationUtils.getLocalizationMessage(MessageKeys.PASSWORD_NOT_MATCH));
         }
         String encodedPassword = passwordEncoder.encode(request.getNewPassword());
         user.setPassword(encodedPassword);
@@ -198,22 +197,22 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void resetPassword(Long userId, String newPassword) throws InvalidPasswordException, DataNotFoundException {
+    public void resetPassword(Long userId, String newPassword) throws ResourceNotFoundException {
         User user = userRepository
                 .findById(userId)
                 .orElseThrow(() ->
-                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         String encodedPassword = passwordEncoder.encode(newPassword);
         user.setPassword(encodedPassword);
         userRepository.save(user);
     }
 
     @Override
-    public void blockOrEnable(Long userId, Boolean active) throws DataNotFoundException {
+    public void blockOrEnable(Long userId, Boolean active) throws ResourceNotFoundException {
         User user = userRepository
                 .findById(userId)
                 .orElseThrow(() ->
-                        new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         user.setActive(active);
         userRepository.save(user);
     }
@@ -224,13 +223,13 @@ public class UserService implements IUserService {
         Optional<User> user = userRepository.findByPhoneNumber(phone);
 
         if (!user.get().isActive()) {
-            throw new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.USER_IS_LOCKED));
+            throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.USER_IS_LOCKED));
         }
 
         if (user.isPresent()) {
             return userMapper.toUserDTOResponse(user.get());
         } else {
-            throw new DataNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
+            throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
         }
     }
 }

@@ -16,11 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.shopapp.components.LocalizationUtils;
 import com.example.shopapp.dtos.requests.product.ProductDTORequest;
 import com.example.shopapp.dtos.requests.product.ProductImageDTORequest;
 import com.example.shopapp.dtos.responses.product.ProductDTOResponse;
-import com.example.shopapp.exceptions.DataNotFoundException;
-import com.example.shopapp.exceptions.InvalidParamException;
+import com.example.shopapp.exceptions.InvalidDataException;
+import com.example.shopapp.exceptions.ResourceNotFoundException;
 import com.example.shopapp.mappers.ProductMapper;
 import com.example.shopapp.models.Category;
 import com.example.shopapp.models.Product;
@@ -28,6 +29,7 @@ import com.example.shopapp.models.ProductImage;
 import com.example.shopapp.repositories.CategoryRepository;
 import com.example.shopapp.repositories.ProductImageRepository;
 import com.example.shopapp.repositories.ProductRepository;
+import com.example.shopapp.utils.MessageKeys;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -41,14 +43,15 @@ public class ProductService implements IProductService {
     CategoryRepository categoryRepository;
     ProductImageRepository productImageRepository;
     ProductMapper productMapper;
+    LocalizationUtils localizationUtils;
 
     @Override
     @Transactional
-    public Product createProduct(ProductDTORequest request) throws Exception {
+    public Product createProduct(ProductDTORequest request) throws ResourceNotFoundException {
         Category existingCategory = categoryRepository
                 .findById(request.getCategoryId())
-                .orElseThrow(
-                        () -> new DataNotFoundException("Cannot find category with id: " + request.getCategoryId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         Product newProduct = productMapper.toProduct(request);
         newProduct.setCategory(existingCategory);
         return productRepository.save(newProduct);
@@ -60,7 +63,7 @@ public class ProductService implements IProductService {
         if (optionalProduct.isPresent()) {
             return optionalProduct.get();
         }
-        throw new DataNotFoundException("Cannot find product with id =" + productId);
+        throw new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND));
     }
 
     @Override
@@ -76,12 +79,13 @@ public class ProductService implements IProductService {
     public Product updateProduct(long id, ProductDTORequest request) throws Exception {
         Product existingProduct = productRepository
                 .findById(id)
-                .orElseThrow(() -> new DataNotFoundException("Cannot find product with id = " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         if (existingProduct != null) {
             Category existingCategory = categoryRepository
                     .findById(request.getCategoryId())
-                    .orElseThrow(() ->
-                            new DataNotFoundException("Cannot find category with id = " + request.getCategoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
             //            productMapper.updateUser(existProduct, request);
             if (request.getName() != null && !request.getName().isEmpty()) {
                 existingProduct.setName(request.getName());
@@ -120,8 +124,8 @@ public class ProductService implements IProductService {
             throws Exception {
         Product existingProduct = productRepository
                 .findById(productId)
-                .orElseThrow(() -> new DataNotFoundException(
-                        "Cannot find product with id: " + productImageDTORequest.getProductId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
         ProductImage newProductImage = ProductImage.builder()
                 .product(existingProduct)
                 .imageUrl(productImageDTORequest.getImageUrl())
@@ -130,7 +134,7 @@ public class ProductService implements IProductService {
         // Ko cho insert quá 5 ảnh cho 1 sản phẩm
         int size = productImageRepository.findByProductId(productId).size();
         if (size >= ProductImage.MAXIMUM_IMAGES_PER_PRODUCT) {
-            throw new InvalidParamException("Number of images must be <= " + ProductImage.MAXIMUM_IMAGES_PER_PRODUCT);
+            throw new InvalidDataException(localizationUtils.getLocalizationMessage(MessageKeys.UPLOAD_IMAGES_MAX_5));
         }
         if (existingProduct.getThumbnail() == null) {
             existingProduct.setThumbnail(newProductImage.getImageUrl());

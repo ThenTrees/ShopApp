@@ -58,3 +58,15 @@ logging:
   level:
     org:
       springframework.security: DEBUG
+
+payment:
+  vnPay:
+    vnp_PayUrl:  "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+    vnp_ReturnUrl: "http://localhost:8088/api/v1/payments"
+    tmnCode: "3Z168FVT"
+    secretKey: "AOI6H3RDDA0LOB3T7MV13M1UWYUUGYHM"
+    version: "2.1.0"
+    command: "pay"
+    orderType: "other"
+    bankCode: "NCB"
+    vnp_CurrCode: "VND"

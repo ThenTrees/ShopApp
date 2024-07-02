@@ -23,7 +23,6 @@ import com.example.shopapp.mappers.UserMapper;
 import com.example.shopapp.models.User;
 import com.example.shopapp.services.token.ITokenService;
 import com.example.shopapp.services.user.IUserService;
-import com.example.shopapp.utils.MessageKeys;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -41,23 +40,15 @@ public class UserController {
 
     @PostMapping("/details")
     public ResponseEntity<ResponseObject> getMyDetailInfo() throws Exception {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            User user = (User) authentication.getPrincipal();
-            String phone = user.getPhoneNumber();
-            UserDTOResponse userDTOResponse = userService.getMyDetailInfo(phone);
-            return ResponseEntity.ok(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(userDTOResponse)
-                    .message("success")
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ResponseObject.builder()
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
-                            .build());
-        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        String phone = user.getPhoneNumber();
+        UserDTOResponse userDTOResponse = userService.getMyDetailInfo(phone);
+        return ResponseEntity.ok(ResponseObject.builder()
+                .code(HttpStatus.OK.value())
+                .data(userDTOResponse)
+                .message("success")
+                .build());
     }
 
     @PutMapping()
@@ -66,83 +57,54 @@ public class UserController {
             //                                                     @RequestHeader("Authorization") String
             // authorizationHeader
             ) throws Exception {
-        try {
-            //        String extractedToken = authorizationHeader.substring(7);
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            User user = (User) authentication.getPrincipal();
-            Long userId = user.getId();
-            User userResponse = userService.updateUser(userId, request);
-            return ResponseEntity.ok(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(userMapper.toUserDTOResponse(userResponse))
-                    .message("Cập nhật thông tin tài khoản thành công")
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ResponseObject.builder()
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
-                            .build());
-        }
+        //        String extractedToken = authorizationHeader.substring(7);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        Long userId = user.getId();
+        User userResponse = userService.updateUser(userId, request);
+        return ResponseEntity.ok(ResponseObject.builder()
+                .code(HttpStatus.OK.value())
+                .data(userMapper.toUserDTOResponse(userResponse))
+                .message("Cập nhật thông tin tài khoản thành công")
+                .build());
     }
 
     @PutMapping("block/{id}/{active}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<ResponseObject> blockUser(@PathVariable Long id, @PathVariable int active) {
-        try {
-            userService.blockOrEnable(id, active > 0);
-            String message = active > 0 ? "Successfull unblock user" : "Successfull block user";
-            return ResponseEntity.ok(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .message(message)
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ResponseObject.builder()
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
-                            .build());
-        }
+        userService.blockOrEnable(id, active > 0);
+        String message = active > 0 ? "Successfull unblock user" : "Successfull block user";
+        return ResponseEntity.ok(ResponseObject.builder()
+                .code(HttpStatus.OK.value())
+                .message(message)
+                .build());
     }
 
     @PutMapping("reset-password/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<ResponseObject> resetPassword(@PathVariable Long id) {
-        try {
-            String newPassword = UUID.randomUUID().toString().substring(0, 5);
-            userService.resetPassword(id, newPassword);
-            return ResponseEntity.ok(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .message("Successfull reset password")
-                    .data(newPassword)
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ResponseObject.builder()
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
-                            .build());
-        }
+
+        String newPassword = UUID.randomUUID().toString().substring(0, 5);
+        userService.resetPassword(id, newPassword);
+        return ResponseEntity.ok(ResponseObject.builder()
+                .code(HttpStatus.OK.value())
+                .message("Successfull reset password")
+                .data(newPassword)
+                .build());
     }
 
     @PutMapping("change-password")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
-    public ResponseEntity<ResponseObject> changePassword(@RequestBody UserChangePasswordDTORequest request) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            User user = (User) authentication.getPrincipal();
-            userService.changePassword(user, request);
-            return ResponseEntity.ok(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .message("Successfull change password")
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ResponseObject.builder()
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
-                            .build());
-        }
+    public ResponseEntity<ResponseObject> changePassword(@RequestBody UserChangePasswordDTORequest request)
+            throws Exception {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        userService.changePassword(user, request);
+        return ResponseEntity.ok(ResponseObject.builder()
+                .code(HttpStatus.OK.value())
+                .message("Successfull change password")
+                .build());
     }
 
     @GetMapping()
@@ -152,30 +114,20 @@ public class UserController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit)
             throws Exception {
-        try {
-            // tạo pageable
-            PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("id").ascending());
-            Page<UserDTOResponse> usersPage =
-                    userService.findAll(keyword, pageRequest).map(userMapper::toUserDTOResponse);
-            // lấy tổng số trang
-            int totalPage = usersPage.getTotalPages();
-            // lấy tổng số phần tử
-            List<UserDTOResponse> users = usersPage.getContent();
-            ListUserDTOResponse listUserDTOResponse = ListUserDTOResponse.builder()
-                    .users(users)
-                    .totalPages(totalPage)
-                    .build();
-            return ResponseEntity.ok(ResponseObject.builder()
-                    .status(HttpStatus.OK)
-                    .data(listUserDTOResponse)
-                    .message("Successfull get all users")
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ResponseObject.builder()
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .message(localizationUtils.getLocalizationMessage(MessageKeys.LOGIN_FAILED, e.getMessage()))
-                            .build());
-        }
+        // tạo pageable
+        PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("id").ascending());
+        Page<UserDTOResponse> usersPage =
+                userService.findAll(keyword, pageRequest).map(userMapper::toUserDTOResponse);
+        // lấy tổng số trang
+        int totalPage = usersPage.getTotalPages();
+        // lấy tổng số phần tử
+        List<UserDTOResponse> users = usersPage.getContent();
+        ListUserDTOResponse listUserDTOResponse =
+                ListUserDTOResponse.builder().users(users).totalPages(totalPage).build();
+        return ResponseEntity.ok(ResponseObject.builder()
+                .code(HttpStatus.OK.value())
+                .data(listUserDTOResponse)
+                .message("Successfull get all users")
+                .build());
     }
 }

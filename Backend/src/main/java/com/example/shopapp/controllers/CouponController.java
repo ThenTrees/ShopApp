@@ -26,7 +26,7 @@ public class CouponController {
                 .body(ResponseObject.builder()
                         .message("Create coupon successfully")
                         .data(couponService.createCoupon(couponDTORequest))
-                        .status(HttpStatus.CREATED)
+                        .code(HttpStatus.CREATED.value())
                         .build());
     }
 
@@ -37,7 +37,7 @@ public class CouponController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseObject.builder()
                         .message("Delete coupon successfully")
-                        .status(HttpStatus.OK)
+                        .code(HttpStatus.OK.value())
                         .build());
     }
 
@@ -47,7 +47,7 @@ public class CouponController {
                 .body(ResponseObject.builder()
                         .message("Get coupon successfully")
                         .data(couponService.getCouponById(id))
-                        .status(HttpStatus.OK)
+                        .code(HttpStatus.OK.value())
                         .build());
     }
 
@@ -57,7 +57,7 @@ public class CouponController {
                 .body(ResponseObject.builder()
                         .message("Get all coupons successfully")
                         .data(couponService.getAllCoupons())
-                        .status(HttpStatus.OK)
+                        .code(HttpStatus.OK.value())
                         .build());
     }
 
@@ -68,7 +68,7 @@ public class CouponController {
                 .body(ResponseObject.builder()
                         .message("Calculate coupon successfully")
                         .data(couponService.calculateDiscount(couponCode, totalAmount))
-                        .status(HttpStatus.OK)
+                        .code(HttpStatus.OK.value())
                         .build());
     }
 }

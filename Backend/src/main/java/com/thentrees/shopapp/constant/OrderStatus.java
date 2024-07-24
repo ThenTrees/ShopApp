@@ -1,5 +1,7 @@
 package com.thentrees.shopapp.constant;
 
+import lombok.AllArgsConstructor;
+
 public class OrderStatus {
     public static final String PENDING = "pending";
     public static final String PROCESSING = "processing";

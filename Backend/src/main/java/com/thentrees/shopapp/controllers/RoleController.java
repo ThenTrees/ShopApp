@@ -2,13 +2,13 @@ package com.thentrees.shopapp.controllers;
 
 import java.util.List;
 
-import com.thentrees.shopapp.dtos.responses.ResponseObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.thentrees.shopapp.dtos.responses.ResponseObject;
 import com.thentrees.shopapp.models.Role;
 import com.thentrees.shopapp.services.role.IRoleService;
 
@@ -28,9 +28,9 @@ public class RoleController {
     public ResponseEntity<ResponseObject> getAllRoles() {
         List<Role> roles = roleService.getAllRoles();
         return ResponseEntity.ok(ResponseObject.builder()
-                        .code(200)
-                        .message("Success")
-                        .data(roles)
+                .code(200)
+                .message("Success")
+                .data(roles)
                 .build());
     }
 }

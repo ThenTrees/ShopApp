@@ -67,8 +67,8 @@ public class ProductRedisService implements IProductRedisService {
     }
 
     @Override
-    public void saveDetailProduct(ProductDTOResponse productDTOResponse, Long id) throws JsonProcessingException {
-        String key = this.getKeyFromDetailProduct(id);
+    public void saveDetailProduct(ProductDTOResponse productDTOResponse) throws JsonProcessingException {
+        String key = this.getKeyFromDetailProduct(productDTOResponse.getId());
         String json = redisObjectMapper.writeValueAsString(productDTOResponse);
         redisTemplate.opsForValue().set(key, json);
     }

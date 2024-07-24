@@ -23,7 +23,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             + "OR o.email LIKE %:keyword%) ")
     Page<Order> findByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
-
     @Query("SELECT o FROM Order o JOIN o.payments p WHERE p.vnpTxnRef = :vnp_TxnRef")
     Order findByVnp_TxnRef(@Param("vnp_TxnRef") String vnp_TxnRef);
 }

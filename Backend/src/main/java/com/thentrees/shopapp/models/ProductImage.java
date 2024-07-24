@@ -17,6 +17,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductImage extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
     public static final int MAXIMUM_IMAGES_PER_PRODUCT = 6;
 
     @ManyToOne

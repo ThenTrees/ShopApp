@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final UserRepository userRepository;
+
+
     // user's detail object
     @Bean
     public UserDetailsService userDetailsService() {

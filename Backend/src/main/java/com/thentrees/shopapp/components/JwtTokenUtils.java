@@ -6,7 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.stereotype.Component;
 
 import com.thentrees.shopapp.models.Token;
@@ -20,7 +23,9 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 
-@Component
+@Configuration
+@EnableWebSecurity
+@Slf4j
 @RequiredArgsConstructor
 public class JwtTokenUtils {
     private final TokenRepository tokenRepository;
@@ -40,15 +45,14 @@ public class JwtTokenUtils {
         claims.put("phoneNumber", user.getPhoneNumber());
         claims.put("userId", user.getId());
         try {
-            String token = Jwts.builder()
+            return Jwts.builder()
                     .setClaims(claims)
                     .setSubject(user.getPhoneNumber())
                     .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000L)) // 1000 miliseconds
                     .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                     .compact();
-            return token;
         } catch (Exception e) {
-            System.out.println("Cannot create jwt token, error: " + e.getMessage());
+            log.error("Cannot create jwt token, error: {}", e.getMessage());
             return null;
         }
     }
@@ -59,16 +63,15 @@ public class JwtTokenUtils {
         claims.put("phoneNumber", user.getPhoneNumber());
         claims.put("userId", user.getId());
         try {
-            String token = Jwts.builder()
+            return Jwts.builder()
                     .setClaims(claims)
                     .setSubject(user.getPhoneNumber())
                     .setExpiration(
                             new Date(System.currentTimeMillis() + expirationRefreshToken * 1000L)) // 1000 miliseconds
                     .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                     .compact();
-            return token;
         } catch (Exception e) {
-            System.out.println("Cannot create jwt rf token, error: " + e.getMessage());
+            log.error("Cannot create jwt rf token, error: {}", e.getMessage());
             return null;
         }
     }
@@ -96,7 +99,7 @@ public class JwtTokenUtils {
 
     // check expiration
     public Boolean isTokenExpired(String token) {
-        Date expirationDate = (Date) this.extractClaim(token, Claims::getExpiration);
+        Date expirationDate = this.extractClaim(token, Claims::getExpiration);
         return expirationDate.before(new Date());
     }
 
@@ -107,7 +110,7 @@ public class JwtTokenUtils {
     public boolean validateToken(String token, User userDetails) {
         final String phoneNumber = this.extractPhoneNumber(token);
         Token existToken = tokenRepository.findByToken(token);
-        if (existToken == null || existToken.isRevoked() == true || !userDetails.isActive()) {
+        if (existToken == null || existToken.isRevoked() || !userDetails.isActive()) {
             return false;
         }
         return (phoneNumber.equals(userDetails.getUsername())) && !isTokenExpired(token);

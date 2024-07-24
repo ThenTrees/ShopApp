@@ -1,11 +1,7 @@
 package com.thentrees.shopapp.controllers;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
 
-import com.thentrees.shopapp.components.LocalizationUtils;
-import com.thentrees.shopapp.configuration.VNPAYConfig;
-import com.thentrees.shopapp.utils.MessageKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.websocket.server.PathParam;
 
@@ -34,16 +30,29 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.OK).body(paymentService.createPayment(orderId, req));
     }
 
-
     @GetMapping("/vn-pay-callback")
-    public ResponseEntity<ResponseObject> payCallbackHandler(HttpServletRequest request) throws UnsupportedEncodingException {
+    public ResponseEntity<ResponseObject> payCallbackHandler(HttpServletRequest request)
+            throws UnsupportedEncodingException {
         log.info("Received callback from VNPAY");
         return ResponseEntity.status(HttpStatus.OK).body(paymentService.callback(request));
     }
 
-    @GetMapping("/ipn")
-    public ResponseEntity<ResponseObject> handleVnpayIpn(HttpServletRequest request) throws UnsupportedEncodingException {
-        return ResponseEntity.status(HttpStatus.OK).body(paymentService.ipnPayment(request));
-    }
+    //    @GetMapping("/ipn")
+    //    public ResponseEntity<ResponseObject> handleVnpayIpn(HttpServletRequest request)
+    //            throws UnsupportedEncodingException {
+    //        log.info("Received IPN from VNPAY");
+    //        return ResponseEntity.status(HttpStatus.OK).body(paymentService.ipnPayment(request));
+    //    }
 
+    @PostMapping("/ipn")
+    public ResponseEntity<ResponseObject> handleVnpayIpn(HttpServletRequest request) {
+        log.info("Received IPN from VNPAY");
+
+        //        paymentService.ipnPayment(request)
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseObject.builder()
+                        .code(200)
+                        .message("IPN successfully processed")
+                        .build());
+    }
 }

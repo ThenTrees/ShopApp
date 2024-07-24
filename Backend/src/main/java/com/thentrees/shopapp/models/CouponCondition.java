@@ -16,7 +16,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CouponCondition extends BaseEntity {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_id", nullable = false)
     Coupon coupon;

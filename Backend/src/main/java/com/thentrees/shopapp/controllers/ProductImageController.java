@@ -27,7 +27,7 @@ public class ProductImageController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> delete(@PathVariable Long id) throws Exception {
+    public ResponseEntity<ResponseObject> delete(@PathVariable Long id) throws Exception {
         ProductImage productImage = productImageService.deleteProductImage(id);
         if (productImage != null) {
             productService.deleteFile(productImage.getImageUrl());

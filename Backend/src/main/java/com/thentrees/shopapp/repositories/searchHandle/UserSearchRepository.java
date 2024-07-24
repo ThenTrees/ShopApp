@@ -25,9 +25,9 @@ public class UserSearchRepository {
     @PersistenceContext
     private EntityManager entityManager;
 
-    private final String LIKE_FORMAT = "%%%s%%";
+    private final static String LIKE_FORMAT = "%%%s%%";
 
-    public PageResponse<?> searchUser(int pageNo, int pageSize, String sortBy, String keyword) {
+    public PageResponse<Object> searchUser(int pageNo, int pageSize, String sortBy, String keyword) {
 
         StringBuilder sqlQuery = new StringBuilder(
                 "SELECT new com.thentrees.shopapp.dtos.responses.user.UserDTOResponse(u.fullName, u.phoneNumber, u.address) FROM User u WHERE 1=1");

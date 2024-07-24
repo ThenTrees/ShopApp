@@ -24,7 +24,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class User extends BaseEntity implements UserDetails {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
     // collate -> khoong phan biet hoa thuong
     @Column(
             name = "fullname",

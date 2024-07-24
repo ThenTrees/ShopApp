@@ -15,9 +15,9 @@ import lombok.*;
 @NoArgsConstructor
 @MappedSuperclass
 public class BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    Long id;
 
     @Column(name = "created_at")
     @CreationTimestamp

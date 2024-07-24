@@ -31,6 +31,7 @@ import com.thentrees.shopapp.dtos.requests.product.ProductImageDTORequest;
 import com.thentrees.shopapp.dtos.responses.PageResponse;
 import com.thentrees.shopapp.dtos.responses.ResponseObject;
 import com.thentrees.shopapp.dtos.responses.product.ProductDTOResponse;
+import com.thentrees.shopapp.mappers.ProductMapper;
 import com.thentrees.shopapp.models.Product;
 import com.thentrees.shopapp.models.ProductImage;
 import com.thentrees.shopapp.services.product.IProductService;
@@ -48,6 +49,7 @@ import lombok.experimental.FieldDefaults;
 public class ProductController {
     IProductService productService;
     IProductRedisService productRedisService;
+    ProductMapper productMapper;
     Logger logger = Logger.getLogger(ProductController.class.getName());
     private final LocalizationUtils localizationUtils;
 
@@ -108,7 +110,14 @@ public class ProductController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject> getProductById(@PathVariable("id") Long productId) throws Exception {
-        Product existingProduct = productService.getProductById(productId);
+
+        ProductDTOResponse existingProduct = productRedisService.getDetailProduct(productId);
+        if (existingProduct == null) {
+            Product product = productService.getProductById(productId);
+            existingProduct = productMapper.toProductDTOResponse(product);
+            productRedisService.saveDetailProduct(existingProduct);
+        }
+
         return ResponseEntity.ok(ResponseObject.builder()
                 .data(existingProduct)
                 .message("Get detail product successfully")
@@ -219,15 +228,25 @@ public class ProductController {
     }
 
     @GetMapping("images/{filename}")
-    public ResponseEntity<?> viewImage(@PathVariable String filename) throws Exception {
+    public ResponseEntity<ResponseObject> viewImage(@PathVariable String filename) throws Exception {
         Path imagePath = Paths.get("uploads/" + filename);
         UrlResource resource = new UrlResource(imagePath.toUri());
         if (resource.exists()) {
-            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(resource);
+            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(
+                    ResponseObject.builder()
+                            .message("Get image successfully")
+                            .code(HttpStatus.OK.value())
+                            .data(resource)
+                            .build()
+            );
         } else {
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_JPEG)
-                    .body(new UrlResource(Paths.get("uploads/notfound.jpeg").toUri()));
+                    .body(ResponseObject.builder()
+                            .message("Image not found")
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .data(null)
+                            .build());
         }
     }
 

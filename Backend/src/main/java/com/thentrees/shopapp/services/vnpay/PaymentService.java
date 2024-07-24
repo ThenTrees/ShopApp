@@ -1,29 +1,28 @@
 package com.thentrees.shopapp.services.vnpay;
 
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.thentrees.shopapp.components.LocalizationUtils;
-import com.thentrees.shopapp.constant.OrderStatus;
-import com.thentrees.shopapp.constant.TypeOfPayment;
-import com.thentrees.shopapp.exceptions.ResourceNotFoundException;
-import com.thentrees.shopapp.models.Order;
-import com.thentrees.shopapp.models.Payment;
-import com.thentrees.shopapp.repositories.OrderRepository;
-import com.thentrees.shopapp.repositories.PaymentRepository;
-import com.thentrees.shopapp.utils.MessageKeys;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.thentrees.shopapp.components.LocalizationUtils;
 import com.thentrees.shopapp.configuration.VNPAYConfig;
+import com.thentrees.shopapp.constant.OrderStatus;
+import com.thentrees.shopapp.constant.TypeOfPayment;
 import com.thentrees.shopapp.dtos.responses.ResponseObject;
+import com.thentrees.shopapp.exceptions.ResourceNotFoundException;
+import com.thentrees.shopapp.models.Order;
+import com.thentrees.shopapp.models.Payment;
+import com.thentrees.shopapp.repositories.OrderRepository;
+import com.thentrees.shopapp.repositories.PaymentRepository;
+import com.thentrees.shopapp.utils.MessageKeys;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,23 +63,21 @@ public class PaymentService implements IPaymentService {
     private final LocalizationUtils localizationUtils;
 
     @Override
-    public ResponseObject createPayment(Long orderId, HttpServletRequest req)
-            throws UnsupportedEncodingException {
+    public ResponseObject createPayment(Long orderId, HttpServletRequest req) throws UnsupportedEncodingException {
         log.info("Creating payment for order: {}", vnp_PayUrl);
         String vnp_TxnRef = VNPAYConfig.getRandomNumber(8);
         String vnp_IpAddr = VNPAYConfig.getIpAddress(req);
 
-        Order order = orderRepository.findById(orderId).orElseThrow(()->
-                new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+        Order order = findOrder(orderId);
 
-        int price =(int) order.getTotalMoney();
+        int price = (int) order.getTotalMoney();
         log.info("Price: {}", price);
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", vnp_Version);
         vnp_Params.put("vnp_Command", vnp_Command);
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(price*100));
+        vnp_Params.put("vnp_Amount", String.valueOf(price * 100));
         vnp_Params.put("vnp_CurrCode", vnp_CurrCode);
         vnp_Params.put("vnp_BankCode", vnp_BankCode);
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
@@ -107,7 +104,7 @@ public class PaymentService implements IPaymentService {
         while (itr.hasNext()) {
             String fieldName = (String) itr.next();
             String fieldValue = (String) vnp_Params.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+            if ((fieldValue != null) && (!fieldValue.isEmpty())) {
                 // Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
@@ -131,7 +128,7 @@ public class PaymentService implements IPaymentService {
                 .vnpCommand(vnp_Command)
                 .vnpAmount(price)
                 .vnpBankCode(vnp_BankCode)
-                .vnpOrderInfo(vnp_TxnRef+"info")
+                .vnpOrderInfo(vnp_TxnRef + "info")
                 .vnpOrderType(orderType)
                 .vnpTxnRef(vnp_TxnRef)
                 .order(order)
@@ -150,7 +147,7 @@ public class PaymentService implements IPaymentService {
     public ResponseObject callback(HttpServletRequest req) throws UnsupportedEncodingException {
         String status = req.getParameter("vnp_ResponseCode");
         Payment payment = paymentRepository.findByVnpTxnRef(req.getParameter("vnp_TxnRef"));
-        ResponseObject rs =  new ResponseObject();
+        ResponseObject rs = new ResponseObject();
 
         switch (status) {
             case "00":
@@ -189,7 +186,6 @@ public class PaymentService implements IPaymentService {
                 rs.setCode(9);
                 break;
         }
-        log.info("Payment callback");
         return ResponseObject.builder()
                 .message(rs.getMessage())
                 .code(rs.getCode())
@@ -200,9 +196,10 @@ public class PaymentService implements IPaymentService {
     public ResponseObject ipnPayment(HttpServletRequest request) throws UnsupportedEncodingException {
         log.info("IPN payment");
         Map<String, String> fields = new HashMap();
-        for (Enumeration params = request.getParameterNames(); params.hasMoreElements();) {
+        for (Enumeration params = request.getParameterNames(); params.hasMoreElements(); ) {
             String fieldName = URLEncoder.encode((String) params.nextElement(), StandardCharsets.US_ASCII.toString());
-            String fieldValue = URLEncoder.encode(request.getParameter(fieldName), StandardCharsets.US_ASCII.toString());
+            String fieldValue =
+                    URLEncoder.encode(request.getParameter(fieldName), StandardCharsets.US_ASCII.toString());
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
                 fields.put(fieldName, fieldValue);
             }
@@ -210,63 +207,48 @@ public class PaymentService implements IPaymentService {
         String vnp_TxnRef = request.getParameter("vnp_TxnRef");
 
         String vnp_SecureHash = request.getParameter("vnp_SecureHash");
-        if (fields.containsKey("vnp_SecureHashType"))
-        {
+        if (fields.containsKey("vnp_SecureHashType")) {
             fields.remove("vnp_SecureHashType");
         }
-        if (fields.containsKey("vnp_SecureHash"))
-        {
+        if (fields.containsKey("vnp_SecureHash")) {
             fields.remove("vnp_SecureHash");
         }
 
         // Check checksum
         String signValue = VNPAYConfig.hashAllFields(fields);
-        if (signValue.equals(vnp_SecureHash))
-        {
-            boolean checkOrderId = paymentRepository.existsByVnpTxnRef(vnp_TxnRef); // vnp_TxnRef exists in your database
+        if (signValue.equals(vnp_SecureHash)) {
+            boolean checkOrderId =
+                    paymentRepository.existsByVnpTxnRef(vnp_TxnRef); // vnp_TxnRef exists in your database
 
             Payment payment = paymentRepository.findByVnpTxnRef(vnp_TxnRef);
             Order order = orderRepository.findByVnp_TxnRef(vnp_TxnRef);
 
-            boolean checkAmount = checkAmount((int)order.getTotalMoney(),(int)payment.getVnpAmount()); // vnp_Amount is valid (Check vnp_Amount VNPAY returns compared to the
-//            amount of the code (vnp_TxnRef) in the Your database).
+            boolean checkAmount = checkAmount((int) order.getTotalMoney(), (int)
+                    payment.getVnpAmount()); // vnp_Amount is valid (Check vnp_Amount VNPAY returns compared to the
+            //            amount of the code (vnp_TxnRef) in the Your database).
             boolean checkOrderStatus = payment.getStatus() == TypeOfPayment.PAID; // PaymnentStatus = 0 (pending)
-            if(checkOrderId)
-            {
-                if(checkAmount)
-                {
-                    if (checkOrderStatus)
-                    {
-                        if ("00".equals(request.getParameter("vnp_ResponseCode")))
-                        {
+            if (checkOrderId) {
+                if (checkAmount) {
+                    if (checkOrderStatus) {
+                        if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
                             order.setStatus(OrderStatus.SHIPPED);
                             orderRepository.save(order);
-                            //Here Code update PaymnentStatus = 1 into your Database
-                        }
-                        else
-                        {
+                            // Here Code update PaymnentStatus = 1 into your Database
+                        } else {
                             // Here Code update PaymnentStatus = 2 into your Database
                         }
                         log.info("{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}");
-                    }
-                    else
-                    {
+                    } else {
 
                         log.info("{\"RspCode\":\"02\",\"Message\":\"Order already confirmed\"}");
                     }
-                }
-                else
-                {
+                } else {
                     log.info("{\"RspCode\":\"04\",\"Message\":\"Invalid Amount\"}");
                 }
-            }
-            else
-            {
+            } else {
                 log.info("{\"RspCode\":\"01\",\"Message\":\"Order not Found\"}");
             }
-        }
-        else
-        {
+        } else {
             log.info("{\"RspCode\":\"97\",\"Message\":\"Invalid Checksum\"}");
         }
         return ResponseObject.builder()
@@ -274,8 +256,25 @@ public class PaymentService implements IPaymentService {
                 .code(HttpStatus.OK.value())
                 .build();
     }
-    private boolean checkAmount(int price, int vnp_Amount){
+
+    private boolean checkAmount(int price, int vnp_Amount) {
         return price == vnp_Amount;
     }
 
+    private Order findOrder(long orderId) {
+        return orderRepository
+                .findById(orderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(localizationUtils.getLocalizationMessage(MessageKeys.NOT_FOUND)));
+    }
+
+    private boolean validateSignature(Map<String, String[]> parameterMap) {
+        // Thực hiện logic xác nhận chữ ký (signature) của VNPay
+        // Trả về true nếu hợp lệ, false nếu không hợp lệ
+        return true; // Đây chỉ là ví dụ, bạn cần triển khai logic thực tế
+    }
+
+    private void updateTransactionStatus(String orderId, String status) {
+        // Thực hiện cập nhật trạng thái giao dịch trong cơ sở dữ liệu của bạn
+    }
 }

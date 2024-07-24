@@ -1,6 +1,5 @@
 package com.thentrees.shopapp.configuration;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -10,30 +9,32 @@ import javax.crypto.spec.SecretKeySpec;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 
+@Configuration
+@RequiredArgsConstructor
 public class VNPAYConfig {
-
     private static final Logger log = LoggerFactory.getLogger(VNPAYConfig.class);
 
     @Value("${payment.vnPay.secretKey}")
-    public static String secretKey;
+    public static final String secretKey = "";
 
-    public static String md5(String message) throws Exception {
+    public static String md5(String message) {
         String digest = null;
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] hash = md.digest(message.getBytes("UTF-8"));
+            byte[] hash = md.digest(message.getBytes(StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder(2 * hash.length);
             for (byte b : hash) {
                 sb.append(String.format("%02x", b & 0xff));
             }
             digest = sb.toString();
-        } catch (UnsupportedEncodingException ex) {
-            digest = "";
         } catch (NoSuchAlgorithmException ex) {
+            log.info("Error when hashing", ex);
             digest = "";
         }
         return digest;
@@ -43,14 +44,12 @@ public class VNPAYConfig {
         String digest = null;
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(message.getBytes("UTF-8"));
+            byte[] hash = md.digest(message.getBytes(StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder(2 * hash.length);
             for (byte b : hash) {
                 sb.append(String.format("%02x", b & 0xff));
             }
             digest = sb.toString();
-        } catch (UnsupportedEncodingException ex) {
-            digest = "";
         } catch (NoSuchAlgorithmException ex) {
             digest = "";
         }
@@ -62,11 +61,11 @@ public class VNPAYConfig {
         List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder sb = new StringBuilder();
-        Iterator itr = fieldNames.iterator();
+        Iterator<String> itr = fieldNames.iterator();
         while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
+            String fieldName = itr.next();
             String fieldValue = (String) fields.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+            if ((fieldValue != null) && (!fieldValue.isEmpty())) {
                 sb.append(fieldName);
                 sb.append("=");
                 sb.append(fieldValue);

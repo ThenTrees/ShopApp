@@ -64,7 +64,7 @@ public class OrderDTOResponse {
     //    List<OrderDetailDTOResponse> orderDetailsDTOResponse;
 
     public static OrderDTOResponse fromOrder(Order order) {
-        OrderDTOResponse orderResponse = OrderDTOResponse.builder()
+        return OrderDTOResponse.builder()
                 .id(order.getId())
                 .fullName(order.getFullName())
                 .phoneNumber(order.getPhoneNumber())
@@ -80,6 +80,5 @@ public class OrderDTOResponse {
                 .paymentMethod(order.getPaymentMethod())
                 .orderDetails(order.getOrderDetails())
                 .build();
-        return orderResponse;
     }
 }

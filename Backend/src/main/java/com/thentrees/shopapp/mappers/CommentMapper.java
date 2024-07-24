@@ -15,9 +15,10 @@ public interface CommentMapper {
     CommentMapper INSTANCE = Mappers.getMapper(CommentMapper.class);
 
     @Mappings({
-        //        @Mapping(target = "product.id", source = "productId"),
-        //        @Mapping(target = "user.id", source = "userId"),
-        @Mapping(target = "content", source = "content")
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "content", source = "content"),
+            @Mapping(target = "user.id", source = "userId"),
+            @Mapping(target = "product.id", source = "productId")
     })
     Comment toComment(CommentDTORequest commentDTORequest);
 

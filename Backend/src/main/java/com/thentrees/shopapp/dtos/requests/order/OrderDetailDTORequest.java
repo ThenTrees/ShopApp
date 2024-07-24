@@ -34,4 +34,8 @@ public class OrderDetailDTORequest {
     @Min(value = 0, message = "total_money must be >= 0")
     @JsonProperty("total_money")
     Double totalMoney;
+
+    @JsonProperty("coupon_id")
+    Long couponId;
+
 }

@@ -52,7 +52,7 @@ public class OrderDetailController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getOrderDetail(@Valid @PathVariable("id") Long id) {
+    public ResponseEntity<ResponseObject> getOrderDetail(@Valid @PathVariable("id") Long id) {
         OrderDetail orderDetail = orderDetailService.getOrderDetail(id);
         OrderDetailDTOResponse orderDetailResponse = orderDetailMapper.toOrderDetailDTOResponse(orderDetail);
         return ResponseEntity.ok()

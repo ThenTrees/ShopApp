@@ -20,7 +20,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Order extends BaseEntity {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
     @ManyToOne
     @JoinColumn(name = "user_id")
     User user;
@@ -59,15 +61,14 @@ public class Order extends BaseEntity {
     @Column(name = "shipping_date")
     LocalDate shippingDate; // ngày giao hàng
 
-    @Column(name = "tracking_number")
-    String trackingNumber; // mã vận đơn
+//    @Column(name = "tracking_number")
+//    String trackingNumber; // mã vận đơn
 
     @Column(name = "payment_method")
     String paymentMethod; // phương thức thanh toán
 
     @Column(name = "active")
     Boolean active; // thuộc về admin
-
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference

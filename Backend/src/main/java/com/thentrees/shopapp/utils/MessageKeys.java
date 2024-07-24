@@ -46,18 +46,14 @@ public class MessageKeys {
     // token
     public static final String TOKEN_EXPISTRING = "token.get.token_expiring";
     ///////////////////////////////
-    //payment
+    // payment
 
     public static final String PAYMENT_SUCCESS = "payment.success";
     public static final String PAYMENT_INCOMPLETE = "payment.incomplete";
     public static final String PAYMENT_DEFECTIVE = "payment.defective";
     public static final String PAYMENT_ISLAND = "payment.island";
-    public static final String PAYMENT_PROCESSING= "payment.processing";
-    public static final String PAYMENT_REQUEST_REFUND= "payment.request.refund";
-    public static final String PAYMENT_SUSPECTED= "payment.suspected";
-    public static final String PAYMENT_REFUND_DENIED= "payment.refund.denied";
-
-
-
-
+    public static final String PAYMENT_PROCESSING = "payment.processing";
+    public static final String PAYMENT_REQUEST_REFUND = "payment.request.refund";
+    public static final String PAYMENT_SUSPECTED = "payment.suspected";
+    public static final String PAYMENT_REFUND_DENIED = "payment.refund.denied";
 }

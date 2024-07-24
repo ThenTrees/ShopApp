@@ -40,6 +40,9 @@ public class OrderDtoRequest {
 
     String address;
 
+     Boolean active;
+
+
     String note;
 
     @JsonProperty("shipping_method")
@@ -59,4 +62,8 @@ public class OrderDtoRequest {
 
     @JsonProperty("cart_items")
     List<CartItemDTORequest> cartItems;
+
+    @JsonProperty("total_money")
+    @Min(value = 0, message = "Total money must be >= 0")
+    private Double totalMoney;
 }

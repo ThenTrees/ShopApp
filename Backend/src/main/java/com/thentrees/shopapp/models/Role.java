@@ -12,10 +12,12 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class Role extends BaseEntity {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
     @Column(name = "name", nullable = false)
     private String name;
 
-    public static String ADMIN = "ADMIN";
-    public static String USER = "USER";
+    public static final String ADMIN = "ADMIN";
+    public static final String USER = "USER";
 }

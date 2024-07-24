@@ -36,10 +36,10 @@ public class CouponDTORequest {
     LocalDate endDate;
 
     // số lượng discount
-    @JsonProperty(value = "quantity", defaultValue = "10")
-    int quantity;
-
-    // số lượng đã sử dụng
-    @JsonProperty(value = "quantity_used", defaultValue = "0")
-    int quantityUsed;
+//    @JsonProperty(value = "quantity", defaultValue = "10")
+//    int quantity;
+//
+//    // số lượng đã sử dụng
+//    @JsonProperty(value = "quantity_used", defaultValue = "0")
+//    int quantityUsed;
 }

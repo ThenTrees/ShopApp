@@ -16,6 +16,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderDetail extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
     @ManyToOne
     @JoinColumn(name = "order_id")
     @JsonBackReference
@@ -35,9 +38,6 @@ public class OrderDetail extends BaseEntity {
     @Column(name = "total_money")
     Double total_money;
     //    Double totalMoney;
-
-    //    @Column(name = "color")
-    //    String color;
 
     @ManyToOne
     @JoinColumn(name = "coupon_id")

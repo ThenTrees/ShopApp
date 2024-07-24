@@ -10,6 +10,7 @@ import com.thentrees.shopapp.models.ProductImage;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
@@ -31,7 +32,7 @@ public class ProductDTOResponse extends BaseResponse {
     Long categoryId;
 
     @JsonProperty("product_images")
-    List<ProductImage> productImages = new ArrayList<>();
+    List<ProductImage> productImages;
 
     public static ProductDTOResponse fromProduct(Product product) {
         ProductDTOResponse productResponse = ProductDTOResponse.builder()

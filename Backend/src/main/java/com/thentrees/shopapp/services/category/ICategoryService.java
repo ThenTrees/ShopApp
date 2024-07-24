@@ -14,5 +14,5 @@ public interface ICategoryService {
 
     Category updateCategory(long categoryId, CategoryDTORequest categoryDTORequest);
 
-    Category deleteCategory(long id) throws Exception;
+    Category deleteCategory(long id) throws IllegalStateException;
 }

@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 // @EnableMethodSecurity
 @EnableWebMvc
 @RequiredArgsConstructor
-@EnableWebSecurity()
+@EnableWebSecurity(debug = true)
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
 
@@ -72,7 +72,6 @@ public class WebSecurityConfig {
                             .requestMatchers(GET, String.format("%s/order_details/**", apiPrefix))
                             .permitAll()
                             .anyRequest()
-
                             .authenticated();
                 });
         http.securityMatcher(String.valueOf(EndpointRequest.toAnyEndpoint()));

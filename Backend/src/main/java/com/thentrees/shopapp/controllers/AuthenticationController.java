@@ -1,7 +1,6 @@
 package com.thentrees.shopapp.controllers;
 
 import java.util.List;
-import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -11,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -79,8 +77,6 @@ public class AuthenticationController {
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseObject> login(
             @Valid @RequestBody LoginDTORequest loginDto, HttpServletRequest request) throws Exception {
-        //            String token = userService.login(loginDto.getPhoneNumber(), loginDto.getPassword(),
-        // loginDto.getRoleId());
         String userAgent = request.getHeader("User-Agent");
         String token = userService.login(loginDto);
         User user = userService.getUserDetailsFromToken(token);
@@ -113,8 +109,6 @@ public class AuthenticationController {
                 .token(jwtToken.getToken())
                 .refreshToken(jwtToken.getRefreshToken())
                 .build();
-        return ResponseObject.builder()
-                .data(userLoginDTOResponse)
-                .build();
+        return ResponseObject.builder().data(userLoginDTOResponse).build();
     }
 }

@@ -1,7 +1,9 @@
 package com.thentrees.shopapp.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -14,7 +16,10 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Payment extends BaseEntity{
+public class Payment extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
     String vnpCommand;
     double vnpAmount;
     String vnpBankCode;
@@ -22,6 +27,7 @@ public class Payment extends BaseEntity{
     String vnpOrderType;
     String vnpTxnRef;
     String status;
+
     @ManyToOne
     @JoinColumn(name = "order_id")
     @JsonBackReference

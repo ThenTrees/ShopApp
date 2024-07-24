@@ -17,7 +17,7 @@ public interface IProductRedisService {
 
     ProductDTOResponse getDetailProduct(Long id) throws JsonProcessingException;
 
-    void saveDetailProduct(ProductDTOResponse productDTOResponse, Long id) throws JsonProcessingException;
+    void saveDetailProduct(ProductDTOResponse productDTOResponse) throws JsonProcessingException;
 
     void saveAllProducts(
             List<ProductDTOResponse> productDTOResponses, String keyword, Long categoryId, PageRequest pageable)

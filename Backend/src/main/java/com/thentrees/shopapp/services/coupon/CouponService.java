@@ -46,9 +46,9 @@ public class CouponService implements ICouponService {
             throw new InvalidDataException(localizationUtils.getLocalizationMessage(MessageKeys.DATE_IS_BEFORE));
         }
 
-        if (couponDTORequest.getQuantity() < 0) {
-            throw new InvalidDataException(localizationUtils.getLocalizationMessage(MessageKeys.INVALID_QUANTITY));
-        }
+//        if (couponDTORequest.getQuantity() < 0) {
+//            throw new InvalidDataException(localizationUtils.getLocalizationMessage(MessageKeys.INVALID_QUANTITY));
+//        }
 
         Coupon coupon = couponMapper.toCoupon(couponDTORequest);
         couponRepository.save(coupon);
@@ -84,7 +84,7 @@ public class CouponService implements ICouponService {
             String operator = condition.getOperator();
             String value = condition.getValue();
 
-            double amountDiscount = Double.valueOf(String.valueOf(condition.getDiscountAmount()));
+            double amountDiscount = Double.parseDouble(String.valueOf(condition.getDiscountAmount()));
 
             if (attribute.equals("minimum_amount")) {
                 if ((operator.equals(">") && updatedTotalAmount > Double.parseDouble(value))) {

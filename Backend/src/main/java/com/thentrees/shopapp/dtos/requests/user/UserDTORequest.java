@@ -3,6 +3,7 @@ package com.thentrees.shopapp.dtos.requests.user;
 import java.util.Date;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -42,7 +43,7 @@ public class UserDTORequest {
     @JsonProperty("google_account_id")
     int googleAccountId;
 
-    //    @NotNull(message = "Role ID is required")
-    //    @JsonProperty("role_id")
-    //    Long roleId;
+    @NotNull(message = "Role ID is required")
+    @JsonProperty("role_id")
+    Long roleId;
 }

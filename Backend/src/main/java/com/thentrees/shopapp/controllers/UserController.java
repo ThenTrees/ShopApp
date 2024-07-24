@@ -108,7 +108,7 @@ public class UserController {
 
     @GetMapping()
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<?> getAllUsers(
+    public ResponseEntity<PageResponse> getAllUsers(
             @RequestParam(defaultValue = "", required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit,
@@ -119,9 +119,10 @@ public class UserController {
         } catch (Exception e) {
             log.error("Error: {}", e.getMessage(), e.getCause());
             return ResponseEntity.badRequest()
-                    .body(ResponseObject.builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message("Error: " + e.getMessage())
+                    .body(PageResponse.builder()
+                            .page(page)
+                            .size(limit)
+                            .total(0)
                             .build());
         }
     }

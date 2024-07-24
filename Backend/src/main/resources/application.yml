@@ -1,15 +1,22 @@
 server:
-  port: ${PORT:8080}
+  port: ${PORT:8088}
+#  address: spring.tnydev.docs.io.vn
 spring:
   datasource:
-    url: ${DATASOURCE_URL}
-    driverClassName: "com.mysql.cj.jdbc.Driver"
-    username: ${DATASOURCE_USERNAME}
-    password: ${DATASOURCE_PASSWORD}
+    url: ${DATASOURCE_URL:jdbc:mysql://mysql8-container:3306/shopapp}
+    username: ${DATASOURCE_USERNAME:root}
+    password: ${DATASOURCE_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
   jpa:
+    show-sql: false
     hibernate:
       ddl-auto: update
-    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+      format_sql: true
   servlet:
     multipart:
       max-file-size: 10MB
@@ -23,17 +30,13 @@ spring:
       use-redis-cache: true
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-  flyway:
-    locations: classpath:/db/migration,classpath:/dev/db/migration
-    baseline-version: 0
-    baseline-on-migrate: true
 
 api:
   prefix: /api/v1
 jwt:
-  expiration: 7200 # 2 tiếng 2 * 60 * 60
+  expiration: 72000 # 2 tiếng 2 * 60 * 60
   expiration-refreshToken: 655_200 # 7 ngày 7 * 24 * 60 * 60
-  secretKey: ${SECRET_KEY}
+  secretKey: ${SECRET_KEY:1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij}
 
 #healthCheck
 management:
@@ -61,11 +64,11 @@ logging:
 
 payment:
   vnPay:
-    vnp_PayUrl: ${VNPAY_URL}
-    vnp_ReturnUrl: ${VNPAY_RETURN_URL}
-    vnp_IpnUrl: ${VNPAY_IPN_URL}
-    tmnCode: ${VNPAY_TMN_CODE}
-    secretKey: ${VNPAY_SECRET_KEY}
+    vnp_PayUrl: ${VNPAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+    vnp_ReturnUrl: ${VNPAY_RETURN_URL:http://localhost:8088/api/v1/payments/vn-pay-callback}
+    vnp_IpnUrl: ${VNPAY_IPN_URL:http://localhost:8088/api/v1/payment/vnpay/ipn}
+    tmnCode: ${VNPAY_TMN_CODE:3Z168FVT}
+    secretKey: ${VNPAY_SECRET_KEY:RKJUM14VI2C2IKDBCXSXQDEIIGWA9JFD}
     version: "2.1.0"
     command: "pay"
     orderType: "other"

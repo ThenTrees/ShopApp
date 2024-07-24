@@ -60,7 +60,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public Product getProductById(long productId) throws Exception {
+    public Product getProductById(long productId) throws ResourceNotFoundException {
         Optional<Product> optionalProduct = productRepository.getDetailProduct(productId);
         if (optionalProduct.isPresent()) {
             return optionalProduct.get();
@@ -77,7 +77,7 @@ public class ProductService implements IProductService {
 
     @Override
     @Transactional
-    public Product updateProduct(long id, ProductDTORequest request) throws Exception {
+    public Product updateProduct(long id, ProductDTORequest request) throws ResourceNotFoundException {
         Product existingProduct = productRepository
                 .findById(id)
                 .orElseThrow(() ->
@@ -122,7 +122,7 @@ public class ProductService implements IProductService {
     @Override
     @Transactional
     public ProductImage createProductImage(Long productId, ProductImageDTORequest productImageDTORequest)
-            throws Exception {
+            throws ResourceNotFoundException {
         Product existingProduct = productRepository
                 .findById(productId)
                 .orElseThrow(() ->

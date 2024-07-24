@@ -22,10 +22,12 @@ public class ProductSearchRepository {
 
     //    package com.thentrees.shopapp.dtos.responses.product;
 
+    private final String REPLACE_STRING = "%%%s%%";
+
     @PersistenceContext
     private EntityManager entityManager;
 
-    public PageResponse<?> searchProduct(int pageNo, int pageSize, String sortBy, String keyword, Long categoryId) {
+    public PageResponse<Object> searchProduct(int pageNo, int pageSize, String sortBy, String keyword, Long categoryId) {
 
         StringBuilder sqlQuery = new StringBuilder(
                 "SELECT new com.thentrees.shopapp.dtos.responses.product.ProductDTOResponse(p.name, p.price, p.description, p.categoryId) FROM Product p WHERE 1=1");
@@ -48,10 +50,10 @@ public class ProductSearchRepository {
         // get list of product
         Query selectQuery = entityManager.createQuery(sqlQuery.toString());
         if (StringUtils.hasLength(keyword)) {
-            selectQuery.setParameter("keyword", String.format("%%%s%%", keyword));
-            selectQuery.setParameter("price", String.format("%%%s%%", keyword));
-            selectQuery.setParameter("description", String.format("%%%s%%", keyword));
-            selectQuery.setParameter("categoryId", String.format("%%%s%%", keyword));
+            selectQuery.setParameter("keyword", String.format(REPLACE_STRING, keyword));
+            selectQuery.setParameter("price", String.format(REPLACE_STRING, keyword));
+            selectQuery.setParameter("description", String.format(REPLACE_STRING, keyword));
+            selectQuery.setParameter("categoryId", String.format(REPLACE_STRING, keyword));
         }
         selectQuery.setFirstResult(pageNo);
         selectQuery.setMaxResults(pageSize);
@@ -69,10 +71,10 @@ public class ProductSearchRepository {
 
         Query countQuery = entityManager.createQuery(sqlCountQuery.toString());
         if (StringUtils.hasLength(keyword)) {
-            countQuery.setParameter(1, String.format("%%%s%%", keyword));
-            countQuery.setParameter(2, String.format("%%%s%%", keyword));
-            countQuery.setParameter(3, String.format("%%%s%%", keyword));
-            countQuery.setParameter(4, String.format("%%%s%%", keyword));
+            countQuery.setParameter(1, String.format(REPLACE_STRING, keyword));
+            countQuery.setParameter(2, String.format(REPLACE_STRING, keyword));
+            countQuery.setParameter(3, String.format(REPLACE_STRING, keyword));
+            countQuery.setParameter(4, String.format(REPLACE_STRING, keyword));
             countQuery.getSingleResult();
         }
 

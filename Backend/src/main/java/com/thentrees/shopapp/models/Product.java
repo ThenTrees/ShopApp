@@ -20,6 +20,9 @@ import lombok.experimental.FieldDefaults;
 // Event-driven approach with Spring Data JPA
 @EntityListeners(ProductListener.class)
 public class Product extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
     @Column(name = "name", nullable = false, length = 350)
     String name;

@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,7 +22,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.thentrees.shopapp.components.JwtTokenUtils;
 import com.thentrees.shopapp.models.User;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -39,7 +39,7 @@ public class JwtTokenFilter extends OncePerRequestFilter { // filter theo tung r
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain)
-            throws ServletException, IOException {
+            throws ServletException, IOException, NullPointerException {
         // lọc request
         // lấy token từ header
         // kiểm tra token
@@ -51,6 +51,7 @@ public class JwtTokenFilter extends OncePerRequestFilter { // filter theo tung r
             }
             final String authorizationHeader = request.getHeader("Authorization");
             if (authorizationHeader != null && !authorizationHeader.startsWith("Bearer ")) {
+                logger.error("Authorization header is not started with Bearer");
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authHeader null or not started with Bearer");
             }
             // kiểm tra token
